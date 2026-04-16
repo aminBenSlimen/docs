@@ -1,0 +1,165 @@
+---
+title: 'Create order'
+description: 'Place a new limit or market order on a prediction market outcome.'
+---
+
+Place a new limit order or market order on a specific market outcome. Set `price` to a value between 0 and 1 for a limit order, or leave it `null` to execute at the current market price.
+
+## Endpoint
+
+```
+POST https://api.futuur.com/orders/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Request
+
+<ParamField body="market" type="integer" required>
+  The market (outcome) ID to place the order on.
+</ParamField>
+
+<ParamField body="side" type="string" required>
+  Order side. Use `bid` to purchase shares or `ask` to sell shares.
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  Currency for the order. One of `USDC`, `USDT`, `USD`, or `OOM`.
+</ParamField>
+
+<ParamField body="price" type="number">
+  Limit price expressed as a probability between 0 and 1. Set to `null` to place a market order that executes immediately at the best available price.
+</ParamField>
+
+<ParamField body="shares" type="number">
+  Number of shares to buy or sell.
+</ParamField>
+
+<ParamField body="amount" type="number">
+  Total cost of the order in currency units. Used for validation against `shares` and `price`. Optional if `shares` is provided.
+</ParamField>
+
+<ParamField body="position" type="string">
+  Position direction. Use `l` (long) to bet that the outcome occurs, or `s` (short) to bet against it.
+</ParamField>
+
+<ParamField body="expired_at" type="string">
+  ISO 8601 datetime at which an unfilled or partially filled limit order is automatically canceled. Set to `null` for no expiration.
+</ParamField>
+
+<ParamField body="cancel_conflicting_orders" type="boolean" default="false">
+  When `true`, any existing open orders that conflict with this order are canceled before the new order is placed.
+</ParamField>
+
+## Response
+
+Returns `201 Created` with the newly created order object.
+
+<ResponseField name="id" type="integer" required>
+  Unique ID of the created order.
+</ResponseField>
+
+<ResponseField name="market" type="integer" required>
+  Market (outcome) ID the order is placed on.
+</ResponseField>
+
+<ResponseField name="side" type="string" required>
+  Order side: `bid` or `ask`.
+</ResponseField>
+
+<ResponseField name="currency" type="string" required>
+  Currency used: `USDC`, `USDT`, `USD`, or `OOM`.
+</ResponseField>
+
+<ResponseField name="price" type="number">
+  Limit price between 0 and 1, or `null` for a market order.
+</ResponseField>
+
+<ResponseField name="shares" type="number">
+  Number of shares in the order.
+</ResponseField>
+
+<ResponseField name="amount" type="number">
+  Cost of the order in currency units.
+</ResponseField>
+
+<ResponseField name="position" type="string">
+  Position direction: `l` (long) or `s` (short).
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Initial order status. Typically `open` or `processing` immediately after creation.
+</ResponseField>
+
+<ResponseField name="expired_at" type="string">
+  Expiration datetime, or `null` if no expiration is set.
+</ResponseField>
+
+<ResponseField name="created_at" type="string" required>
+  ISO 8601 datetime when the order was created.
+</ResponseField>
+
+## Error codes
+
+<Warning>
+  The following application-level error codes may be returned in the response body when the order cannot be created.
+</Warning>
+
+| Error code | Description |
+| --- | --- |
+| `RealMoneyForbiddenCountry` | Real-money trading is not available in your country. |
+| `RealMoneyBetNotAllowed` | Your account is not permitted to place real-money orders. |
+| `EmailNotConfirmed` | You must confirm your email address before placing orders. |
+| `UserBlockedBets` | Your account has been blocked from placing orders. |
+| `InvalidHMACKey` | The HMAC signature or key is invalid. |
+| `UserNotEnoughBalance` | Your account balance is insufficient for this order. |
+| `InvalidShares` | The number of shares specified is not valid. |
+| `OutcomeDisabled` | The selected market outcome is currently disabled. |
+| `MarketClosed` | The market is closed and no longer accepting orders. |
+| `OrderBookMarketClosed` | The order book for this market is closed. |
+| `OrderBookConflictingOrders` | Conflicting open orders exist. Set `cancel_conflicting_orders` to `true` to resolve. |
+| `OrderBookInvalidAmount` | The order amount does not meet the minimum or maximum requirements. |
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url "https://api.futuur.com/orders/" \
+  --header "Key: pk_live_abc123def456" \
+  --header "Timestamp: 1712534400" \
+  --header "HMAC: 3a9f2c1b...sha512signature" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "market": 3801,
+    "side": "bid",
+    "currency": "USDC",
+    "price": 0.65,
+    "shares": 100,
+    "position": "l",
+    "cancel_conflicting_orders": false
+  }'
+```
+
+</CodeGroup>
+
+```json Sample response (201 Created)
+{
+  "id": 10483,
+  "market": 3801,
+  "side": "bid",
+  "currency": "USDC",
+  "price": 0.65,
+  "shares": 100.0,
+  "amount": 65.0,
+  "position": "l",
+  "status": "open",
+  "expired_at": null,
+  "created_at": "2026-04-07T11:30:00Z"
+}
+```

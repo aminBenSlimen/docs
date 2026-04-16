@@ -1,0 +1,169 @@
+---
+title: "Authentication"
+description: "Authenticate Futuur API requests using HMAC-SHA512 signatures."
+---
+
+Every request to the Futuur API must be authenticated. Authentication uses HMAC-SHA512 signatures generated from your public/private key pair. There are no bearer tokens or session cookies — each request is independently signed.
+
+## Get your API keys
+
+Sign up at [futuur.com](https://futuur.com) and generate your keys from your account settings. You receive two keys:
+
+- **Public key** — included in every request as the `Key` header. Safe to log.
+- **Private key** — used to sign requests. Never share or log this value.
+
+## Required headers
+
+Every authenticated request must include these three headers:
+
+| Header | Value |
+|--------|-------|
+| `Key` | Your public key |
+| `Timestamp` | Current Unix timestamp (seconds since epoch) |
+| `HMAC` | SHA-512 hexdigest of the signed parameter string |
+
+## Signing process
+
+<Steps>
+  <Step title="Collect parameters to sign">
+    Gather all request parameters — query string parameters for GET requests, body parameters for POST requests — plus `Key` (your public key) and `Timestamp` (current Unix timestamp as an integer).
+  </Step>
+  <Step title="Sort alphabetically by key name">
+    Sort all parameters (including `Key` and `Timestamp`) alphabetically by their key name. For example: `Key`, `Timestamp`, `category` sorts to `Key`, `Timestamp`, `category` — but if you have `amount`, it would come before `Key`.
+  </Step>
+  <Step title="URL-encode the sorted parameters">
+    Join the sorted key-value pairs as a URL-encoded query string, for example:
+
+    ```
+    Key=YOUR_PUBLIC_KEY&Timestamp=1234567890&category=5
+    ```
+  </Step>
+  <Step title="Sign with your private key">
+    Compute an HMAC-SHA512 digest using your private key as the secret and the URL-encoded string as the message. Use the hex digest (not base64).
+
+    ```
+    hmac.new(private_key_bytes, encoded_params_bytes, sha512).hexdigest()
+    ```
+  </Step>
+  <Step title="Add headers to your request">
+    Include `Key`, `Timestamp`, and `HMAC` as request headers. Do not include the parameters again in the query string separately — they are already encoded in the signature.
+  </Step>
+</Steps>
+
+## Code examples
+
+<CodeGroup>
+
+```python python
+import hashlib
+import hmac
+import datetime
+from collections import OrderedDict
+from urllib.parse import urlencode
+
+PRIVATE_KEY = "your_private_key"
+PUBLIC_KEY = "your_public_key"
+
+# Collect all request parameters plus Key and Timestamp
+params = {
+    "Key": PUBLIC_KEY,
+    "Timestamp": int(datetime.datetime.utcnow().timestamp()),
+    "category": 5,  # any query/body params for this request
+}
+
+# Sort alphabetically and URL-encode
+params_to_sign = OrderedDict(sorted(params.items()))
+encoded_params = urlencode(params_to_sign).encode("utf-8")
+encoded_private_key = PRIVATE_KEY.encode("utf-8")
+
+# Compute HMAC-SHA512
+hmac_signature = hmac.new(encoded_private_key, encoded_params, hashlib.sha512).hexdigest()
+
+# Build headers
+headers = {
+    "Key": PUBLIC_KEY,
+    "Timestamp": str(params["Timestamp"]),
+    "HMAC": hmac_signature,
+}
+
+# Make the request
+import requests
+response = requests.get(
+    "https://api.futuur.com/events/",
+    params={"category": 5},
+    headers=headers,
+)
+```
+
+```javascript javascript
+const crypto = require("crypto");
+
+const PRIVATE_KEY = "your_private_key";
+const PUBLIC_KEY = "your_public_key";
+
+function signRequest(requestParams = {}) {
+  const timestamp = Math.floor(Date.now() / 1000);
+
+  // Combine request params with auth params
+  const params = { ...requestParams, Key: PUBLIC_KEY, Timestamp: timestamp };
+
+  // Sort alphabetically and URL-encode
+  const sortedKeys = Object.keys(params).sort();
+  const encoded = sortedKeys
+    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+    .join("&");
+
+  // Compute HMAC-SHA512
+  const signature = crypto
+    .createHmac("sha512", PRIVATE_KEY)
+    .update(encoded)
+    .digest("hex");
+
+  return {
+    Key: PUBLIC_KEY,
+    Timestamp: String(timestamp),
+    HMAC: signature,
+  };
+}
+
+// Example: GET /events/?category=5
+const headers = signRequest({ category: 5 });
+
+fetch("https://api.futuur.com/events/?category=5", { headers })
+  .then((res) => res.json())
+  .then(console.log);
+```
+
+```bash curl
+# Pre-compute the HMAC signature using Python or another tool,
+# then pass the headers directly.
+
+curl https://api.futuur.com/events/?category=5 \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1234567890" \
+  -H "HMAC: YOUR_COMPUTED_SIGNATURE"
+```
+
+</CodeGroup>
+
+## GET vs. POST requests
+
+- **GET requests**: include all query string parameters in the parameter set you sign (in addition to `Key` and `Timestamp`).
+- **POST requests**: include all body parameters in the parameter set you sign. Do not mix query and body parameters.
+
+<Tip>
+  If your GET request has no additional parameters (e.g., `GET /me/`), you still sign just `Key` and `Timestamp`.
+</Tip>
+
+## Common errors
+
+| Error | Cause |
+|-------|-------|
+| `InvalidHMACKey` | The public key in the `Key` header is not recognized. Check for typos or use the wrong key. |
+| `InvalidHMACSignature` | The computed signature does not match. Common causes: wrong sort order, missing parameters in the signed set, encoding mismatch, or using the wrong private key. |
+| `MissingTimestamp` | The `Timestamp` header is absent or malformed. |
+| `ExpiredTimestamp` | The timestamp is too far from the server's current time. Ensure your system clock is synchronized (NTP). |
+
+<Warning>
+  Never include your private key in client-side code or commit it to version control. Treat it with the same care as a password.
+</Warning>

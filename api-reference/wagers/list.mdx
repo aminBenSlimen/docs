@@ -1,0 +1,162 @@
+---
+title: 'List wagers'
+description: 'Retrieve a paginated list of wagers, with optional filters by user, event, activity status, and currency mode.'
+---
+
+Retrieve a list of wagers. You can filter by active status, event, currency mode, or by bets placed by users you follow. Authenticated requests return your own wagers by default. Public wagers can also be accessed without authentication.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/wagers/
+```
+
+## Authentication
+
+<Note>
+  Authentication is optional for this endpoint. Unauthenticated requests can access public wager data. To access your own private wagers or filter by followed users, include the `Key`, `Timestamp`, and `HMAC` headers.
+</Note>
+
+## Request
+
+<ParamField query="active" type="boolean">
+  When `true`, returns only active wagers with a status of `purchased`.
+</ParamField>
+
+<ParamField query="past_bets" type="boolean">
+  When `true`, returns only inactive wagers — those that are sold, won, lost, or disabled.
+</ParamField>
+
+<ParamField query="event" type="integer">
+  Filter wagers by event ID.
+</ParamField>
+
+<ParamField query="user" type="integer">
+  Filter wagers by user ID.
+</ParamField>
+
+<ParamField query="following" type="boolean">
+  When `true`, returns only wagers placed by users you follow.
+</ParamField>
+
+<ParamField query="currency_mode" type="string">
+  Filter by currency mode: `play_money`, `real_money`, or an empty string to return all.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  Pagination offset. Number of results to skip before returning results.
+</ParamField>
+
+## Response
+
+Returns a paginated list of wager objects.
+
+<ResponseField name="count" type="integer" required>
+  Total number of wagers matching the query.
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  URL for the next page of results. `null` if there are no more pages.
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  URL for the previous page of results. `null` if on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="object[]" required>
+  Array of wager objects.
+  <Expandable title="Wager properties">
+    <ResponseField name="id" type="integer" required>
+      Unique wager ID.
+    </ResponseField>
+    <ResponseField name="user" type="integer" required>
+      ID of the user who placed the wager.
+    </ResponseField>
+    <ResponseField name="market" type="integer" required>
+      Market (outcome) ID the wager is placed on.
+    </ResponseField>
+    <ResponseField name="event" type="integer" required>
+      Event ID associated with the wager.
+    </ResponseField>
+    <ResponseField name="currency" type="string" required>
+      Currency used for the wager.
+    </ResponseField>
+    <ResponseField name="shares" type="number" required>
+      Number of shares held.
+    </ResponseField>
+    <ResponseField name="amount" type="number" required>
+      Total amount wagered in currency units.
+    </ResponseField>
+    <ResponseField name="avg_price" type="number" required>
+      Average price per share at time of purchase, expressed as a probability between 0 and 1.
+    </ResponseField>
+    <ResponseField name="current_value" type="number">
+      Current market value of the wager in currency units.
+    </ResponseField>
+    <ResponseField name="status" type="string" required>
+      Wager status: `purchased`, `sold`, `won`, `lost`, or `disabled`.
+    </ResponseField>
+    <ResponseField name="position" type="string" required>
+      Position direction: `l` (long) or `s` (short).
+    </ResponseField>
+    <ResponseField name="created_at" type="string" required>
+      ISO 8601 datetime when the wager was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/wagers/?active=true&currency_mode=real_money&limit=2" \
+  --header "Key: pk_live_abc123def456" \
+  --header "Timestamp: 1712534400" \
+  --header "HMAC: 3a9f2c1b...sha512signature"
+```
+
+</CodeGroup>
+
+```json Sample response
+{
+  "count": 12,
+  "next": "https://api.futuur.com/wagers/?active=true&currency_mode=real_money&limit=2&offset=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 88201,
+      "user": 5042,
+      "market": 3801,
+      "event": 901,
+      "currency": "USDC",
+      "shares": 100.0,
+      "amount": 65.0,
+      "avg_price": 0.65,
+      "current_value": 71.50,
+      "status": "purchased",
+      "position": "l",
+      "created_at": "2026-04-05T14:22:10Z"
+    },
+    {
+      "id": 88195,
+      "user": 5042,
+      "market": 4112,
+      "event": 920,
+      "currency": "USDC",
+      "shares": 50.0,
+      "amount": 21.0,
+      "avg_price": 0.42,
+      "current_value": 19.00,
+      "status": "purchased",
+      "position": "l",
+      "created_at": "2026-04-04T09:05:33Z"
+    }
+  ]
+}
+```

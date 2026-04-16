@@ -1,0 +1,151 @@
+---
+title: "Order book"
+description: "Retrieve aggregated order book data for a specific market within an event, including bids and asks at each price level."
+---
+
+Get the aggregated order book for a market within an event. The response contains bid and ask arrays with cumulative depth data at each price level, allowing you to assess market liquidity and your position within it.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/events/{id}/order_book/
+```
+
+## Authentication
+
+HMAC authentication is required. Include the following headers with every request:
+
+| Header      | Description                              |
+| ----------- | ---------------------------------------- |
+| `Key`       | Your public API key                      |
+| `Timestamp` | Current Unix timestamp                   |
+| `HMAC`      | SHA-512 signature of the request payload |
+
+## Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the event.
+</ParamField>
+
+<ParamField query="currency_mode" type="string" required>
+  The currency mode to query. Accepted values: `play_money`, `real_money`.
+</ParamField>
+
+<ParamField query="market" type="integer" required>
+  The ID of the market within the event for which to retrieve the order book.
+</ParamField>
+
+<ParamField query="position" type="string" default="l">
+  The position side to query. Accepted values: `l` (long), `s` (short).
+</ParamField>
+
+## Response
+
+<ResponseField name="bids" type="object[]" required>
+  Aggregated bid levels, sorted from highest to lowest price.
+  <Expandable title="properties">
+    <ResponseField name="price" type="number">
+      Price per share at this level (0–1).
+    </ResponseField>
+    <ResponseField name="total_shares" type="number">
+      Total number of shares available at this price level.
+    </ResponseField>
+    <ResponseField name="total_amount" type="number">
+      Total currency amount represented at this price level.
+    </ResponseField>
+    <ResponseField name="cumulative_shares" type="number">
+      Cumulative shares from the best bid down to and including this level.
+    </ResponseField>
+    <ResponseField name="cumulative_amount" type="number">
+      Cumulative currency amount from the best bid down to and including this level.
+    </ResponseField>
+    <ResponseField name="total_user_shares" type="number">
+      Number of shares at this level belonging to you.
+    </ResponseField>
+    <ResponseField name="total_user_shares_requested" type="number">
+      Number of shares at this level you have requested but that have not yet been filled.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="asks" type="object[]" required>
+  Aggregated ask levels, sorted from lowest to highest price.
+  <Expandable title="properties">
+    <ResponseField name="price" type="number">
+      Price per share at this level (0–1).
+    </ResponseField>
+    <ResponseField name="total_shares" type="number">
+      Total number of shares offered at this price level.
+    </ResponseField>
+    <ResponseField name="total_amount" type="number">
+      Total currency amount represented at this price level.
+    </ResponseField>
+    <ResponseField name="cumulative_shares" type="number">
+      Cumulative shares from the best ask up to and including this level.
+    </ResponseField>
+    <ResponseField name="cumulative_amount" type="number">
+      Cumulative currency amount from the best ask up to and including this level.
+    </ResponseField>
+    <ResponseField name="total_user_shares" type="number">
+      Number of shares at this level belonging to you.
+    </ResponseField>
+    <ResponseField name="total_user_shares_requested" type="number">
+      Number of shares at this level you have requested but that have not yet been filled.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/events/1023/order_book/?currency_mode=play_money&market=501&position=l" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```json Sample response
+{
+  "bids": [
+    {
+      "price": 0.62,
+      "total_shares": 120.0,
+      "total_amount": 74.4,
+      "cumulative_shares": 120.0,
+      "cumulative_amount": 74.4,
+      "total_user_shares": 50.0,
+      "total_user_shares_requested": 0.0
+    },
+    {
+      "price": 0.60,
+      "total_shares": 80.0,
+      "total_amount": 48.0,
+      "cumulative_shares": 200.0,
+      "cumulative_amount": 122.4,
+      "total_user_shares": 0.0,
+      "total_user_shares_requested": 0.0
+    }
+  ],
+  "asks": [
+    {
+      "price": 0.64,
+      "total_shares": 95.0,
+      "total_amount": 60.8,
+      "cumulative_shares": 95.0,
+      "cumulative_amount": 60.8,
+      "total_user_shares": 0.0,
+      "total_user_shares_requested": 10.0
+    },
+    {
+      "price": 0.66,
+      "total_shares": 60.0,
+      "total_amount": 39.6,
+      "cumulative_shares": 155.0,
+      "cumulative_amount": 100.4,
+      "total_user_shares": 0.0,
+      "total_user_shares_requested": 0.0
+    }
+  ]
+}
+```

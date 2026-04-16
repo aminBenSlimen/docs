@@ -1,0 +1,123 @@
+---
+title: "Event wagers"
+description: "List all wagers placed on a specific event, with optional filters for active status and currency mode."
+---
+
+Retrieve all wagers associated with an event. Filter to active positions, past bets, or a specific currency mode to narrow the results.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/events/{id}/wagers/
+```
+
+## Authentication
+
+HMAC authentication is required. Include the following headers with every request:
+
+| Header      | Description                              |
+| ----------- | ---------------------------------------- |
+| `Key`       | Your public API key                      |
+| `Timestamp` | Current Unix timestamp                   |
+| `HMAC`      | SHA-512 signature of the request payload |
+
+## Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the event.
+</ParamField>
+
+<ParamField query="active" type="boolean">
+  When `true`, returns only wagers that are currently active (open positions). When `false`, returns only inactive wagers.
+</ParamField>
+
+<ParamField query="currency_mode" type="string" default="play_money">
+  Filter wagers by currency mode. Accepted values: `play_money`, `real_money`.
+</ParamField>
+
+<ParamField query="past_bets" type="boolean">
+  When `true`, includes wagers that have already been settled or closed.
+</ParamField>
+
+## Response
+
+<ResponseField name="results" type="object[]" required>
+  Array of wager objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="integer">
+      Unique identifier for the wager.
+    </ResponseField>
+    <ResponseField name="market" type="integer">
+      ID of the market on which the wager was placed.
+    </ResponseField>
+    <ResponseField name="outcome" type="integer">
+      ID of the outcome the wager is placed on.
+    </ResponseField>
+    <ResponseField name="outcome_name" type="string">
+      Display name of the outcome.
+    </ResponseField>
+    <ResponseField name="shares" type="number">
+      Number of shares held in this wager.
+    </ResponseField>
+    <ResponseField name="amount_spent" type="number">
+      Total currency amount spent to acquire this position.
+    </ResponseField>
+    <ResponseField name="average_price" type="number">
+      Average price per share paid across all fills (0–1).
+    </ResponseField>
+    <ResponseField name="current_value" type="number">
+      Current mark-to-market value of the position.
+    </ResponseField>
+    <ResponseField name="currency_mode" type="string">
+      Currency mode of the wager: `play_money` or `real_money`.
+    </ResponseField>
+    <ResponseField name="active" type="boolean">
+      Whether the wager is currently an open position.
+    </ResponseField>
+    <ResponseField name="settled" type="boolean">
+      Whether the wager has been settled after event resolution.
+    </ResponseField>
+    <ResponseField name="payout" type="number">
+      Amount paid out upon settlement. `null` if the wager has not been settled.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the wager was first created.
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp of the most recent update to this wager.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/events/1023/wagers/?currency_mode=play_money&active=true" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```json Sample response
+{
+  "results": [
+    {
+      "id": 4401,
+      "market": 501,
+      "outcome": 1,
+      "outcome_name": "Yes",
+      "shares": 50.0,
+      "amount_spent": 31.0,
+      "average_price": 0.62,
+      "current_value": 33.5,
+      "currency_mode": "play_money",
+      "active": true,
+      "settled": false,
+      "payout": null,
+      "created_at": "2026-03-15T14:22:10Z",
+      "updated_at": "2026-03-15T14:22:10Z"
+    }
+  ]
+}
+```

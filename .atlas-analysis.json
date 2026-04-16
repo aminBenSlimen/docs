@@ -1,0 +1,108 @@
+{
+  "projectType": "api-service",
+  "projectName": "Futuur API",
+  "projectDescription": "A prediction market API that allows developers to browse events, place limit orders on outcome markets, and manage wagers using play money or real money.",
+  "theme": "luma",
+  "primaryColor": "#2563EB",
+  "lightColor": "#EFF6FF",
+  "darkColor": "#1E3A8A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "authentication",
+              "rate-limits"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/events-and-markets",
+              "concepts/orders",
+              "concepts/wagers",
+              "concepts/currencies"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/placing-a-bet",
+              "guides/selling-a-position",
+              "guides/reading-the-order-book"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Events",
+            "pages": [
+              "api-reference/events/list",
+              "api-reference/events/retrieve",
+              "api-reference/events/actions",
+              "api-reference/events/order-book",
+              "api-reference/events/price-history",
+              "api-reference/events/wagers"
+            ]
+          },
+          {
+            "group": "Orders",
+            "pages": [
+              "api-reference/orders/list",
+              "api-reference/orders/create",
+              "api-reference/orders/cancel"
+            ]
+          },
+          {
+            "group": "Wagers",
+            "pages": [
+              "api-reference/wagers/list",
+              "api-reference/wagers/retrieve"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": [
+              "api-reference/me/information",
+              "api-reference/me/ranking"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Browse and search prediction market events by category, tag, or keyword",
+    "Place limit orders and market orders on event outcomes",
+    "Support for both play money (OOM) and real money (USDC, USDT, USD)",
+    "Order book with bid/ask levels for each market",
+    "Price history with configurable time intervals",
+    "HMAC-based authentication for secure API access",
+    "Long and short positions on market outcomes",
+    "Wager tracking and portfolio management"
+  ],
+  "publicApiSurface": [
+    "GET /events/",
+    "GET /events/{id}/",
+    "GET /events/{id}/actions/",
+    "GET /events/{id}/order_book/",
+    "GET /events/{id}/price_history/",
+    "GET /events/{id}/related_events/",
+    "GET /events/{id}/wagers/",
+    "GET /orders/",
+    "POST /orders/",
+    "PATCH /orders/{id}/cancel/",
+    "GET /wagers/",
+    "GET /wagers/{id}/",
+    "GET /me/",
+    "GET /me/ranking/",
+    "POST /me/safe/"
+  ]
+}

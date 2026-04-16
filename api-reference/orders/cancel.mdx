@@ -1,0 +1,52 @@
+---
+title: 'Cancel order'
+description: 'Cancel an open limit order by its ID.'
+---
+
+Cancel an open limit order. Only orders with a status of `open` or `partial_filled` can be canceled. Orders that are already `filled`, `canceled`, or `processing` cannot be canceled.
+
+## Endpoint
+
+```
+PATCH https://api.futuur.com/orders/{id}/cancel/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Request
+
+<ParamField path="id" type="integer" required>
+  The ID of the limit order to cancel.
+</ParamField>
+
+This endpoint does not accept a request body.
+
+## Response
+
+Returns `204 No Content` on success. No response body is returned.
+
+<Warning>
+  Attempting to cancel an order that is already `filled`, `canceled`, or in `processing` state will return a `400` or `404` error. Verify the order status using [List orders](/api-reference/orders/list) before canceling.
+</Warning>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://api.futuur.com/orders/10482/cancel/" \
+  --header "Key: pk_live_abc123def456" \
+  --header "Timestamp: 1712534400" \
+  --header "HMAC: 3a9f2c1b...sha512signature"
+```
+
+</CodeGroup>
+
+```
+HTTP/1.1 204 No Content
+```

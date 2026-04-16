@@ -1,0 +1,58 @@
+---
+title: "My ranking"
+description: "Get your current leaderboard ranking."
+---
+
+Returns your current position on the Futuur leaderboard. Use this endpoint to track your standing relative to other traders and monitor how your score changes over time.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/me/ranking/
+```
+
+## Authentication
+
+This endpoint requires HMAC-SHA512 authentication. Include the following headers with every request:
+
+| Header | Description |
+|--------|-------------|
+| `Key` | Your public API key |
+| `Timestamp` | Current Unix timestamp |
+| `HMAC` | SHA-512 signature of the request |
+
+## Parameters
+
+This endpoint takes no parameters.
+
+## Response
+
+<ResponseField name="rank" type="integer" required>
+  Your current position on the leaderboard. Lower is better — rank `1` is the top trader.
+</ResponseField>
+
+<ResponseField name="score" type="number" required>
+  Your cumulative score used to determine your rank position.
+</ResponseField>
+
+<ResponseField name="total_users" type="integer" required>
+  The total number of ranked users. Use this alongside `rank` to calculate your percentile.
+</ResponseField>
+
+## Example
+
+```bash
+curl --request GET \
+  --url https://api.futuur.com/me/ranking/ \
+  --header 'Key: YOUR_PUBLIC_KEY' \
+  --header 'Timestamp: 1712345678' \
+  --header 'HMAC: YOUR_HMAC_SIGNATURE'
+```
+
+```json
+{
+  "rank": 127,
+  "score": 8540.5,
+  "total_users": 15000
+}
+```

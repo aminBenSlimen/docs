@@ -1,0 +1,80 @@
+---
+title: "Currencies"
+description: "Supported currencies and how to switch between play money and real money."
+---
+
+Futuur supports two trading modes: **play money** for risk-free testing and **real money** for live trading. You select the mode via the `currency_mode` parameter and specify the currency when placing orders.
+
+## Supported currencies
+
+<CardGroup cols={2}>
+  <Card title="OOM (play money)" icon="flask">
+    Virtual currency with no real-world value. Use OOM to explore the API, test your integration, and practice trading without any financial risk.
+  </Card>
+  <Card title="USDC, USDT, USD (real money)" icon="circle-dollar-sign">
+    Real stablecoins and fiat currency for live prediction markets. Subject to country restrictions.
+  </Card>
+</CardGroup>
+
+## currency_mode parameter
+
+Many endpoints accept a `currency_mode` query parameter that controls which trading environment you interact with.
+
+| Value | Description |
+|---|---|
+| `play_money` | Returns data and places orders in the OOM (virtual) environment |
+| `real_money` | Returns data and places orders in the real money environment |
+
+The `currency_mode` parameter affects endpoints that list events, retrieve order books, and place orders. Omitting it typically defaults to `play_money`.
+
+```bash
+# Browse real money events
+GET /events/?currency_mode=real_money
+
+# Browse play money events
+GET /events/?currency_mode=play_money
+```
+
+<Tip>
+  Start with `currency_mode=play_money` during development. It lets you test the full order lifecycle — placing, filling, and canceling orders — without real funds.
+</Tip>
+
+## Specifying currency when placing orders
+
+When you create an order via `POST /orders/`, include the `currency` field to specify which currency to use.
+
+```json
+{
+  "market": 42,
+  "side": "bid",
+  "position": "l",
+  "amount": 100,
+  "currency": "OOM",
+  "price": null
+}
+```
+
+Use `USDC` or `USDT` for real money orders:
+
+```json
+{
+  "market": 42,
+  "side": "bid",
+  "position": "l",
+  "amount": 10.00,
+  "currency": "USDC",
+  "price": 0.60
+}
+```
+
+The `currency` value you supply must match the `currency_mode` of the event you are trading on. Mixing OOM with a real money event (or vice versa) will return an error.
+
+## Country restrictions
+
+<Warning>
+  Real money trading (USDC, USDT, USD) is **not available in all countries**. If your account or IP address is associated with a restricted region, real money order placement will be rejected.
+
+  Use `currency_mode=play_money` if you are in a restricted region or building an application that does not require real money trading.
+</Warning>
+
+Play money (OOM) is available everywhere with no restrictions.

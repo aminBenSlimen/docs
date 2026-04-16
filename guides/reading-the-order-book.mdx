@@ -1,0 +1,217 @@
+---
+title: "Reading the order book"
+description: "How to read and interpret the order book for a prediction market."
+---
+
+The order book shows all open buy (bid) and sell (ask) orders for a market outcome, aggregated by price level. Use it to understand where the market is trading and to pick a good price for a limit order.
+
+<Note>
+  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+</Note>
+
+## What the order book shows
+
+The order book aggregates open orders at each price level into two sides:
+
+- **Bids** — buyers willing to pay up to a certain price (buy orders)
+- **Asks** — sellers willing to accept at least a certain price (sell orders)
+
+Each level shows the quantity available and the cumulative depth of the book up to that price. This tells you how much liquidity exists and at what prices.
+
+## Fetching the order book
+
+Call `GET /events/{id}/order_book/` with the required `currency_mode` and `market` parameters.
+
+<CodeGroup>
+
+```python python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/events/12345/order_book/",
+    params={
+        "currency_mode": "play_money",
+        "market": 67890,
+        "position": "l",
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+order_book = response.json()
+print(order_book)
+```
+
+```bash curl
+curl -G "https://api.futuur.com/events/12345/order_book/" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "market=67890" \
+  --data-urlencode "position=l" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+### Required parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `currency_mode` | string | `play_money` or `real_money` |
+| `market` | integer | The market ID to query |
+
+### Optional parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `position` | string | `l` | `l` for long order book, `s` for short order book |
+
+## Example response
+
+```json
+{
+  "bids": [
+    {
+      "price": 0.62,
+      "total_shares": 500.0,
+      "total_amount": 310.0,
+      "cumulative_shares": 500.0,
+      "cumulative_amount": 310.0
+    },
+    {
+      "price": 0.60,
+      "total_shares": 1200.0,
+      "total_amount": 720.0,
+      "cumulative_shares": 1700.0,
+      "cumulative_amount": 1030.0
+    },
+    {
+      "price": 0.58,
+      "total_shares": 800.0,
+      "total_amount": 464.0,
+      "cumulative_shares": 2500.0,
+      "cumulative_amount": 1494.0
+    }
+  ],
+  "asks": [
+    {
+      "price": 0.65,
+      "total_shares": 300.0,
+      "total_amount": 195.0,
+      "cumulative_shares": 300.0,
+      "cumulative_amount": 195.0
+    },
+    {
+      "price": 0.67,
+      "total_shares": 750.0,
+      "total_amount": 502.5,
+      "cumulative_shares": 1050.0,
+      "cumulative_amount": 697.5
+    }
+  ]
+}
+```
+
+## Order book fields
+
+Each level in the `bids` and `asks` arrays contains the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `price` | float | The price level (0 to 1, representing probability) |
+| `total_shares` | float | Total shares available at exactly this price level |
+| `total_amount` | float | Total currency amount at exactly this price level |
+| `cumulative_shares` | float | Total shares available at this price level and better |
+| `cumulative_amount` | float | Total currency amount at this price level and better |
+
+For **bids**, levels are sorted from highest price to lowest (best bid first).
+For **asks**, levels are sorted from lowest price to highest (best ask first).
+
+## Interpreting the best bid and ask
+
+The **best bid** is the first entry in the `bids` array — the highest price a buyer is currently willing to pay. The **best ask** is the first entry in `asks` — the lowest price a seller will accept.
+
+```python python
+best_bid = order_book["bids"][0]["price"] if order_book["bids"] else None
+best_ask = order_book["asks"][0]["price"] if order_book["asks"] else None
+
+if best_bid and best_ask:
+    spread = round(best_ask - best_bid, 4)
+    mid_price = round((best_bid + best_ask) / 2, 4)
+    print(f"Best bid: {best_bid}, Best ask: {best_ask}")
+    print(f"Spread: {spread}, Mid price: {mid_price}")
+```
+
+For the example response above:
+- Best bid: `0.62`
+- Best ask: `0.65`
+- Spread: `0.03` (3 cents per share)
+- Mid price: `0.635`
+
+A narrow spread indicates high liquidity. A wide spread means fewer active traders and more price uncertainty.
+
+<Tip>
+  The mid-price is a useful reference point. Placing a limit order just inside the spread — for example, a bid at `0.63` — can get you a better fill price than a market order at the best ask of `0.65`.
+</Tip>
+
+## Using the order book to pick a limit price
+
+The `cumulative_shares` field tells you how much total liquidity is available up to a given price. Use this to estimate how many shares you can buy or sell at a target price.
+
+```python python
+target_shares = 1000.0
+
+# Find the price level where cumulative_shares covers your order
+for level in order_book["asks"]:
+    if level["cumulative_shares"] >= target_shares:
+        print(f"You can buy {target_shares} shares up to price {level['price']}")
+        break
+else:
+    print("Not enough liquidity in the book to fill this order at any listed level.")
+```
+
+For the example response:
+- Buying 300 shares: best ask at `0.65` covers it (`cumulative_shares = 300`)
+- Buying 1000 shares: requires depth up to `0.67` (`cumulative_shares = 1050`)
+
+Setting your limit price at `0.67` or placing a market order would fill a 1000-share buy in this scenario.
+
+<Warning>
+  Liquidity changes continuously. The order book snapshot you fetch may be stale by the time your order executes. For large orders, consider splitting into smaller chunks.
+</Warning>
+
+## Long vs short order books
+
+The `position` parameter controls which order book you're viewing:
+
+| Value | Description |
+|---|---|
+| `l` (default) | Long order book — orders betting the outcome **happens** |
+| `s` | Short order book — orders betting the outcome **does not happen** |
+
+Long and short positions trade in separate books. If you hold a short position and want to sell, fetch the short order book (`position=s`) to see relevant bids.
+
+```python python
+# Fetch the short order book
+response = requests.get(
+    "https://api.futuur.com/events/12345/order_book/",
+    params={
+        "currency_mode": "play_money",
+        "market": 67890,
+        "position": "s",
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+short_book = response.json()
+best_short_bid = short_book["bids"][0]["price"] if short_book["bids"] else None
+print("Best bid for short shares:", best_short_bid)
+```

@@ -1,0 +1,42 @@
+---
+title: "Futuur API Documentation"
+description: "Build prediction market applications with the Futuur API — browse events, place orders, and manage wagers."
+---
+
+Welcome to the Futuur API. Use this API to integrate prediction markets into your applications: browse live events, place limit orders on market outcomes, track wagers, and retrieve price history.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/introduction">
+    Get up and running with your first API call in minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to generate HMAC signatures and authenticate requests.
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/events-and-markets">
+    Understand events, markets, orders, and wagers.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/events/list">
+    Explore every endpoint with request and response details.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Get your API keys">
+    Sign up at [futuur.com](https://futuur.com) and generate your public and private API keys from your account settings.
+  </Step>
+  <Step title="Authenticate requests">
+    Sign each request using HMAC-SHA512 with your private key. Pass your public key, a timestamp, and the signature as headers.
+  </Step>
+  <Step title="Browse events">
+    Call `GET /events/` to list available prediction markets. Filter by category, tag, currency mode, or search term.
+  </Step>
+  <Step title="Place an order">
+    Call `POST /orders/` to place a limit or market order on any open event outcome. Choose a side (bid/ask) and position (long/short).
+  </Step>
+</Steps>
+
+<Note>
+  The Futuur API supports both **play money** (OOM) and **real money** (USDC, USDT, USD) modes. Use `currency_mode=play_money` to test your integration without financial risk.
+</Note>

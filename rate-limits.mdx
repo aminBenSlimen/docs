@@ -1,0 +1,69 @@
+---
+title: "Rate limits"
+description: "Understand Futuur API rate limits and how to stay within them."
+---
+
+The Futuur API enforces rate limits per authenticated user to ensure fair access and platform stability.
+
+## Limits
+
+| Window | Limit |
+|--------|-------|
+| Per minute | 2,000 requests |
+| Per day | 30,000 requests |
+
+Both limits apply to your account (identified by your public key), not per IP address.
+
+## What happens when you exceed a limit
+
+When you exceed a rate limit, the API returns HTTP `429 Too Many Requests`. Your account is temporarily suspended from making further requests until the current window resets.
+
+<Warning>
+  Hitting rate limits repeatedly may result in longer suspension periods. Build your integration to stay well within limits rather than relying on backoff as a primary strategy.
+</Warning>
+
+## Duplicate POST requests
+
+Submitting the same POST request more than once within a 1-second window causes a `wager_action_duplicated` error. This protects against accidental double-submission of orders.
+
+<Note>
+  The duplicate check is based on request content, not idempotency keys. If you need to retry a failed POST, wait at least 1 second before resubmitting.
+</Note>
+
+## Best practices
+
+**Cache responses where possible.** Market data like event listings and price history does not change every second. Cache responses and serve them from memory rather than re-fetching on every operation.
+
+**Use exponential backoff on 429 responses.** If you receive a `429`, wait before retrying. Start with a short delay (e.g., 1 second) and double it on each successive failure, up to a maximum wait time.
+
+```python python
+import time
+import requests
+
+def request_with_backoff(url, headers, max_retries=5):
+    delay = 1
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:
+            time.sleep(delay)
+            delay = min(delay * 2, 60)  # cap at 60 seconds
+            continue
+        return response
+    raise Exception("Rate limit exceeded after max retries")
+```
+
+**Batch reads, not writes.** Use filtering parameters (`category`, `tag`, `currency_mode`) to retrieve only the data you need in a single call rather than fetching all events and filtering client-side.
+
+**Avoid polling at fixed short intervals.** If you are monitoring market state, use longer polling intervals (e.g., 5–10 seconds) and increase the interval during low-activity periods.
+
+<Tip>
+  The daily limit of 30,000 requests averages to 20 requests per second over 24 hours. Design your request patterns around this budget.
+</Tip>
+
+## HTTP response codes
+
+| Code | Meaning |
+|------|---------|
+| `200 OK` | Request succeeded. |
+| `429 Too Many Requests` | Rate limit exceeded. Back off and retry. |
+| `400 Bad Request` | Invalid parameters, including `wager_action_duplicated`. |

@@ -1,0 +1,299 @@
+---
+title: "Selling a position"
+description: "How to sell shares in an existing wager to close or reduce your position."
+---
+
+Selling a position means placing an **ask** (sell) order on a market where you already hold shares. You can sell your entire position to exit completely, or sell a portion to reduce your exposure.
+
+<Note>
+  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+</Note>
+
+<Steps>
+
+<Step title="List your active wagers">
+
+Call `GET /wagers/` to see all positions you currently hold. Filter by `active=true` to show only open wagers.
+
+<CodeGroup>
+
+```python python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/wagers/",
+    params={"active": True},
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+wagers = response.json()["results"]
+for wager in wagers:
+    print(
+        f"Wager {wager['id']} — Market: {wager['market']}, "
+        f"Shares: {wager['shares']}, Position: {wager['position']}"
+    )
+```
+
+```bash curl
+curl -G "https://api.futuur.com/wagers/" \
+  --data-urlencode "active=true" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+The response includes each wager's `market` ID, the number of `shares` you hold, and the `position` (`l` for long, `s` for short).
+
+</Step>
+
+<Step title="Find the wager you want to exit">
+
+Identify the wager you want to sell. Note the following fields from the wager response:
+
+- **`market`** — the market ID you'll use in the sell order
+- **`shares`** — the total number of shares you hold (your maximum sell quantity)
+- **`position`** — `l` (long) if you bet the outcome happens, `s` (short) if you bet against it
+- **`currency`** — the currency the wager was placed in
+
+```python python
+# Pick the wager you want to exit
+target_wager = wagers[0]
+
+market_id = target_wager["market"]
+shares_held = target_wager["shares"]
+position = target_wager["position"]
+currency = target_wager["currency"]
+
+print(f"Selling {shares_held} shares on market {market_id} ({position} position)")
+```
+
+<Tip>
+  To check the current sell price before committing, fetch the order book with `GET /events/{id}/order_book/` and look at the `bids` array. The highest bid is the best price you can sell at. See [Reading the order book](/guides/reading-the-order-book).
+</Tip>
+
+</Step>
+
+<Step title="Place an ask (sell) order">
+
+To sell, place a `POST /orders/` request with `side="ask"`. Match the `position` field to the position type you hold — `l` for long shares, `s` for short shares.
+
+Use `shares` to specify exactly how many shares to sell. Set `price=null` for a market sell (executes immediately at the best available bid), or set a specific `price` to place a limit sell.
+
+**Market sell (sell immediately):**
+
+<CodeGroup>
+
+```python python
+# Sell all shares immediately at the best available price
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": market_id,
+        "side": "ask",
+        "currency": currency,
+        "position": position,
+        "shares": shares_held,
+        "price": None,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+
+order = response.json()
+print("Sell order ID:", order["id"], "Status:", order["status"])
+```
+
+```bash curl
+# Sell all shares immediately at the best available price
+curl -X POST "https://api.futuur.com/orders/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "market": 67890,
+    "side": "ask",
+    "currency": "OOM",
+    "position": "l",
+    "shares": 150.0,
+    "price": null
+  }'
+```
+
+</CodeGroup>
+
+**Limit sell (only fill at your target price or better):**
+
+<CodeGroup>
+
+```python python
+# Limit sell: only sell if the price reaches 0.70 or higher
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": market_id,
+        "side": "ask",
+        "currency": currency,
+        "position": position,
+        "shares": shares_held,
+        "price": 0.70,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+
+order = response.json()
+print("Limit sell order placed. ID:", order["id"])
+```
+
+```bash curl
+# Limit sell: only sell if the price reaches 0.70 or higher
+curl -X POST "https://api.futuur.com/orders/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "market": 67890,
+    "side": "ask",
+    "currency": "OOM",
+    "position": "l",
+    "shares": 150.0,
+    "price": 0.70
+  }'
+```
+
+</CodeGroup>
+
+</Step>
+
+<Step title="Confirm the order is filled and the wager is closed">
+
+Check the order's `status` in the response. For market sells, the status is typically `filled` immediately. For limit sells, it remains `open` until a buyer matches your price.
+
+```python python
+order = response.json()
+
+if order["status"] == "filled":
+    print("Position closed. Proceeds:", order["amount"])
+elif order["status"] == "open":
+    print("Limit sell is open. Waiting for price:", order["price"])
+```
+
+To confirm the wager is fully closed, re-fetch your wagers list. A fully sold wager will no longer appear in the `active=true` results.
+
+<CodeGroup>
+
+```python python
+response = requests.get(
+    "https://api.futuur.com/wagers/",
+    params={"active": True},
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+active_ids = [w["id"] for w in response.json()["results"]]
+if target_wager["id"] not in active_ids:
+    print("Wager is fully closed.")
+else:
+    print("Wager is still open (partial fill or limit order pending).")
+```
+
+```bash curl
+curl -G "https://api.futuur.com/wagers/" \
+  --data-urlencode "active=true" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+</Step>
+
+</Steps>
+
+## Partial sells
+
+You don't have to sell your entire position at once. Pass a `shares` value smaller than your total holding to partially exit. The remaining shares stay open in your wager.
+
+```python python
+# Sell only half your shares
+shares_to_sell = shares_held / 2
+
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": market_id,
+        "side": "ask",
+        "currency": currency,
+        "position": position,
+        "shares": shares_to_sell,
+        "price": None,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+```
+
+After a partial fill, your wager's `shares` field decreases by the number of shares sold.
+
+## Long vs short positions
+
+| Position | What it means | How to sell |
+|---|---|---|
+| Long (`"l"`) | You bet the outcome **happens** | Place `side="ask"`, `position="l"` |
+| Short (`"s"`) | You bet the outcome **does not happen** | Place `side="ask"`, `position="s"` |
+
+Always match the `position` field in your sell order to the position type you hold. Mismatching will result in an error or an unintended new position.
+
+## Cancelling an unfilled limit sell
+
+If your limit sell order hasn't filled yet and you want to cancel it, use `PATCH /orders/{id}/cancel/`:
+
+<CodeGroup>
+
+```python python
+order_id = order["id"]
+
+response = requests.patch(
+    f"https://api.futuur.com/orders/{order_id}/cancel/",
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+print("Cancelled:", response.status_code == 204)
+```
+
+```bash curl
+curl -X PATCH "https://api.futuur.com/orders/99999/cancel/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>

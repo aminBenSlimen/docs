@@ -1,0 +1,102 @@
+---
+title: "Events & Markets"
+description: "Understand events (predictions) and markets (outcomes) in Futuur."
+---
+
+An **event** is a prediction question that you can bet on — for example, "Who will win the 2024 US Presidential Election?" or "Will Bitcoin exceed $100,000 by end of year?" Each event has multiple **markets**, which represent the possible outcomes you can bet on.
+
+<Note>
+  The API uses the term `markets` for what were previously called "Outcomes" in older versions of the API. Events were previously called "Questions."
+</Note>
+
+## Events
+
+An event defines the question, the resolution criteria, and the timeframe. Key fields on an event object include:
+
+| Field | Description |
+|---|---|
+| `id` | Unique identifier |
+| `title` | The prediction question |
+| `slug` | URL-friendly identifier |
+| `status` | Current state: `open`, `closed`, or `resolved` |
+| `categories` | Topic categories the event belongs to |
+| `markets` | Array of outcome markets |
+| `close_time` | When trading stops |
+| `resolution_date` | When the event resolves |
+| `description` | Full question details and resolution criteria |
+
+### Event statuses
+
+<AccordionGroup>
+  <Accordion title="open">
+    The event is active and accepting bets. You can place, modify, and cancel orders.
+  </Accordion>
+  <Accordion title="closed">
+    Trading has stopped — `close_time` has passed — but the event has not yet resolved. No new orders are accepted.
+  </Accordion>
+  <Accordion title="resolved">
+    The outcome has been determined. Winning wagers are paid out and losing wagers are settled. The event is read-only.
+  </Accordion>
+</AccordionGroup>
+
+## Markets
+
+Each market is a single outcome within an event. For example, the event "Who will win the 2024 US Presidential Election?" might have markets for "Candidate A", "Candidate B", and "Other."
+
+Key fields on a market object include:
+
+| Field | Description |
+|---|---|
+| `id` | Unique identifier |
+| `title` | The outcome this market represents |
+| `slug` | URL-friendly identifier |
+| `price` | Current implied probability (0–1) |
+
+The `price` field reflects the market's current probability. A price of `0.65` means the market is trading at a 65% chance of that outcome occurring.
+
+## Market correlation types
+
+Events use one of two correlation types that determine how prices across markets within the same event relate to each other.
+
+<Tabs>
+  <Tab title="linked_prices (default)">
+    All market prices within the event sum to 1. When you buy shares in one outcome, the prices of all other outcomes shift accordingly — just like a traditional prediction market.
+
+    **Example:** An event with three markets at prices `0.50`, `0.30`, and `0.20` (sum = 1.00). If you buy heavily into the first market, its price rises while the others fall to maintain the sum.
+
+    Use this type for mutually exclusive outcomes where exactly one will resolve true.
+  </Tab>
+  <Tab title="independent">
+    Each market's price is calculated independently. Buying shares in one outcome has no effect on prices in other markets within the same event.
+
+    **Example:** An event might ask "Which of these features will ship in Q1?" where multiple outcomes can be true simultaneously. Each market trades independently based on its own order book.
+
+    Use this type when multiple outcomes can resolve true at the same time.
+  </Tab>
+</Tabs>
+
+## Browsing and filtering events
+
+Use `GET /events/` to list events. The endpoint supports the following filters:
+
+| Parameter | Description |
+|---|---|
+| `categories` | Filter by one or more category IDs |
+| `tag` | Filter by tag name |
+| `search` | Full-text search on event titles (max 100 chars) |
+| `currency_mode` | `play_money` or `real_money` — filters events by the trading mode |
+| `resolved_only` | Set to `true` to return only resolved events |
+| `pending_resolution` | Set to `true` to return events awaiting resolution |
+| `live` | Set to `true` to return only currently live events |
+
+```bash
+# List events in a category using play money
+GET /events/?categories=5&currency_mode=play_money
+
+# List resolved events
+GET /events/?resolved_only=true&currency_mode=play_money
+```
+
+<Tip>
+  Use `currency_mode=play_money` while developing and testing your integration to avoid real financial exposure.
+</Tip>

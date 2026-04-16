@@ -1,0 +1,131 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Futuur API",
+  "theme": "maple",
+  "colors": {
+    "primary": "#0027CC",
+    "light": "#8C99F9",
+    "dark": "#0027CC"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/futuur"
+    },
+    "links": [
+      {
+        "label": "Discord",
+        "href": "https://discord.com/channels/956903159362621490/1100054903369515018"
+      },
+      {
+        "label": "Get started",
+        "href": "https://futuur.com/l/login"
+      },
+      {
+        "label": "Help Center",
+        "href": "https://docs.futuur.com/"
+      }
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "authentication",
+              "rate-limits"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/events-and-markets",
+              "concepts/orders",
+              "concepts/wagers",
+              "concepts/currencies"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/placing-a-bet",
+              "guides/selling-a-position",
+              "guides/reading-the-order-book"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Events",
+            "pages": [
+              "api-reference/events/list",
+              "api-reference/events/retrieve",
+              "api-reference/events/actions",
+              "api-reference/events/order-book",
+              "api-reference/events/price-history",
+              "api-reference/events/wagers"
+            ]
+          },
+          {
+            "group": "Orders",
+            "pages": [
+              "api-reference/orders/list",
+              "api-reference/orders/create",
+              "api-reference/orders/cancel"
+            ]
+          },
+          {
+            "group": "Wagers",
+            "pages": [
+              "api-reference/wagers/list",
+              "api-reference/wagers/retrieve"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": [
+              "api-reference/me/information",
+              "api-reference/me/ranking"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fonts": {
+    "family": "Lato",
+    "weight": 500
+  },
+  "thumbnails": {
+    "appearance": "dark",
+    "fonts": {
+      "family": "lato"
+    },
+    "background": "/images/2Thumbnail.png"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "eyebrows": "section"
+  },
+  "search": {
+    "prompt": "Search..."
+  },
+  "description": "Events • Markets • Trading",
+  "favicon": {
+    "light": "/images/favi.svg",
+    "dark": "/images/favi-dark.svg"
+  },
+  "logo": {
+    "light": "/images/light-M.svg",
+    "dark": "/images/dark-M.svg"
+  }
+}

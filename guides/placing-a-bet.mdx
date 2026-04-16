@@ -1,0 +1,356 @@
+---
+title: "Placing a bet"
+description: "Step-by-step guide to placing your first order on a Futuur prediction market."
+---
+
+This guide walks you through finding an event, checking the current price, and placing an order — from a quick market order to a precise limit order.
+
+<Note>
+  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+</Note>
+
+<Steps>
+
+<Step title="Find an event">
+
+Use `GET /events/` to browse available prediction markets. You can search by keyword or filter by category.
+
+<CodeGroup>
+
+```python python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/events/",
+    params={
+        "search": "US election",
+        "currency_mode": "play_money",
+        "limit": 5,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+events = response.json()["results"]
+for event in events:
+    print(event["id"], event["title"])
+```
+
+```bash curl
+curl -G "https://api.futuur.com/events/" \
+  --data-urlencode "search=US election" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "limit=5" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+The response includes a `results` array of events. Each event has an `id` and a `markets` array containing individual outcomes you can bet on.
+
+<Tip>
+  Set `currency_mode=play_money` while testing. Switch to `real_money` when you're ready to trade with USDC, USDT, or USD.
+</Tip>
+
+</Step>
+
+<Step title="Inspect the event's markets">
+
+Each event has one or more markets, each representing a possible outcome. Retrieve a single event to see its markets in detail.
+
+<CodeGroup>
+
+```python python
+response = requests.get(
+    "https://api.futuur.com/events/12345/",
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+event = response.json()
+for market in event["markets"]:
+    print(market["id"], market["title"], "— current price:", market["price"])
+```
+
+```bash curl
+curl "https://api.futuur.com/events/12345/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+Each market has an `id` you'll use when placing an order, and a `price` indicating the current implied probability (0 to 1).
+
+</Step>
+
+<Step title="Check the current price">
+
+Before placing an order, check the live order book to see current bid and ask prices. This is especially useful before placing a limit order.
+
+<CodeGroup>
+
+```python python
+response = requests.get(
+    "https://api.futuur.com/events/12345/order_book/",
+    params={
+        "currency_mode": "play_money",
+        "market": 67890,
+        "position": "l",
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+order_book = response.json()
+best_ask = order_book["asks"][0]["price"] if order_book["asks"] else None
+best_bid = order_book["bids"][0]["price"] if order_book["bids"] else None
+print(f"Best ask: {best_ask}, Best bid: {best_bid}")
+```
+
+```bash curl
+curl -G "https://api.futuur.com/events/12345/order_book/" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "market=67890" \
+  --data-urlencode "position=l" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+See [Reading the order book](/guides/reading-the-order-book) for a full explanation of the response fields.
+
+</Step>
+
+<Step title="Place a market order">
+
+A **market order** (`price=null`) executes immediately at the best available price. Use this when you want to enter a position right away without worrying about a specific price.
+
+To buy shares in a market outcome, set `side="bid"` (buying) and `position="l"` (long — betting the outcome occurs).
+
+<CodeGroup>
+
+```python python
+# Play money market order
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": 67890,
+        "side": "bid",
+        "currency": "OOM",
+        "position": "l",
+        "amount": 100.0,
+        "price": None,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+
+order = response.json()
+print("Order ID:", order["id"], "Status:", order["status"])
+```
+
+```bash curl
+# Play money market order
+curl -X POST "https://api.futuur.com/orders/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "market": 67890,
+    "side": "bid",
+    "currency": "OOM",
+    "position": "l",
+    "amount": 100.0,
+    "price": null
+  }'
+```
+
+</CodeGroup>
+
+For real money, replace `"OOM"` with `"USDC"`, `"USDT"`, or `"USD"`:
+
+<CodeGroup>
+
+```python python
+# Real money market order (USDC)
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": 67890,
+        "side": "bid",
+        "currency": "USDC",
+        "position": "l",
+        "amount": 50.0,
+        "price": None,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+```
+
+```bash curl
+# Real money market order (USDC)
+curl -X POST "https://api.futuur.com/orders/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "market": 67890,
+    "side": "bid",
+    "currency": "USDC",
+    "position": "l",
+    "amount": 50.0,
+    "price": null
+  }'
+```
+
+</CodeGroup>
+
+<Warning>
+  Real money orders are subject to country restrictions. If your account is in a restricted region, the API returns a `RealMoneyForbiddenCountry` or `RealMoneyBetNotAllowed` error.
+</Warning>
+
+</Step>
+
+<Step title="Place a limit order (optional)">
+
+A **limit order** only fills if the market price reaches your target. Set `price` to a value between 0 and 1 (representing the probability / implied odds).
+
+For example, `price=0.55` means you're only willing to buy at 55 cents per share or better.
+
+<CodeGroup>
+
+```python python
+# Limit order: buy at 0.55 or lower
+response = requests.post(
+    "https://api.futuur.com/orders/",
+    json={
+        "market": 67890,
+        "side": "bid",
+        "currency": "OOM",
+        "position": "l",
+        "amount": 100.0,
+        "price": 0.55,
+    },
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+        "Content-Type": "application/json",
+    },
+)
+
+order = response.json()
+print("Limit order placed. ID:", order["id"])
+```
+
+```bash curl
+# Limit order: buy at 0.55 or lower
+curl -X POST "https://api.futuur.com/orders/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "market": 67890,
+    "side": "bid",
+    "currency": "OOM",
+    "position": "l",
+    "amount": 100.0,
+    "price": 0.55
+  }'
+```
+
+</CodeGroup>
+
+You can also set `expired_at` to automatically cancel the order if it hasn't filled by a certain time, and `cancel_conflicting_orders=true` to remove any existing orders that would conflict.
+
+</Step>
+
+<Step title="Confirm the order was filled">
+
+After placing an order, check its `status` in the response. A market order typically has status `filled` immediately. A limit order may be `open` until the market price matches.
+
+```python python
+order = response.json()
+
+if order["status"] == "filled":
+    print("Order filled. Shares acquired:", order["shares"])
+elif order["status"] == "open":
+    print("Limit order is open. Waiting for price to reach:", order["price"])
+elif order["status"] == "cancelled":
+    print("Order was cancelled.")
+```
+
+You can also retrieve your active wagers to confirm the position was created:
+
+<CodeGroup>
+
+```python python
+response = requests.get(
+    "https://api.futuur.com/wagers/",
+    params={"active": True},
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+for wager in response.json()["results"]:
+    print(wager["id"], wager["market"], "shares:", wager["shares"])
+```
+
+```bash curl
+curl -G "https://api.futuur.com/wagers/" \
+  --data-urlencode "active=true" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+</CodeGroup>
+
+</Step>
+
+</Steps>
+
+## Error handling
+
+| Error code | Cause | Resolution |
+|---|---|---|
+| `UserNotEnoughBalance` | Your account balance is too low to cover the order. | Top up your account or reduce the order amount. |
+| `MarketClosed` | The market is no longer accepting orders. | Check the event status before placing orders. |
+| `OutcomeDisabled` | The specific market outcome has been disabled. | Choose a different outcome or check the event details. |
+| `EmailNotConfirmed` | Your account email is not yet verified. | Confirm your email before placing orders. |
+| `UserBlockedBets` | Your account has been restricted from placing bets. | Contact Futuur support. |
+| `InvalidHMACKey` | The HMAC signature is invalid or the public key is wrong. | Re-generate your HMAC signature. See [Authentication](/authentication). |
+
+<Tip>
+  Always check the HTTP status code and the error code in the response body. The API returns structured error responses that make it easy to handle specific cases in your application.
+</Tip>

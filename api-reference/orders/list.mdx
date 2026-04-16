@@ -1,0 +1,173 @@
+---
+title: 'List orders'
+description: 'Retrieve a paginated list of your limit orders, with optional filters by market, event, currency, status, and side.'
+---
+
+Retrieve a list of limit orders associated with your account. By default, only `open` orders are returned. Use the query parameters to filter by market, event, currency mode, status, or order side.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/orders/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Request
+
+<ParamField query="status" type="string" default="open">
+  Filter orders by status. One of `open`, `partial_filled`, `filled`, `canceled`, or `processing`.
+</ParamField>
+
+<ParamField query="side" type="string">
+  Filter by order side. Use `bid` for buy orders or `ask` for sell orders.
+</ParamField>
+
+<ParamField query="market" type="integer">
+  Filter orders by market (outcome) ID.
+</ParamField>
+
+<ParamField query="event" type="integer">
+  Filter orders by event ID.
+</ParamField>
+
+<ParamField query="currency" type="string">
+  Filter by a specific currency code. Maximum 4 characters (e.g., `USDC`, `OOM`).
+</ParamField>
+
+<ParamField query="currency_mode" type="string">
+  Filter by currency mode. One of `play_money` or `real_money`.
+</ParamField>
+
+<ParamField query="currencies" type="string[]">
+  Filter by one or more currency codes.
+</ParamField>
+
+<ParamField query="categories" type="integer[]">
+  Filter by one or more category IDs.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Full-text search query. Maximum 255 characters.
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Field to sort results by. Prefix with `-` for descending order (e.g., `-created_at`).
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  Pagination offset. Number of results to skip before returning results.
+</ParamField>
+
+## Response
+
+Returns a paginated list of limit order objects.
+
+<ResponseField name="count" type="integer" required>
+  Total number of orders matching the query.
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  URL for the next page of results. `null` if there are no more pages.
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  URL for the previous page of results. `null` if on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="object[]" required>
+  Array of limit order objects.
+  <Expandable title="Order properties">
+    <ResponseField name="id" type="integer" required>
+      Unique order ID.
+    </ResponseField>
+    <ResponseField name="market" type="integer" required>
+      Market (outcome) ID the order is placed on.
+    </ResponseField>
+    <ResponseField name="side" type="string" required>
+      Order side: `bid` (buy) or `ask` (sell).
+    </ResponseField>
+    <ResponseField name="currency" type="string" required>
+      Currency used for the order: `USDC`, `USDT`, `USD`, or `OOM`.
+    </ResponseField>
+    <ResponseField name="price" type="number">
+      Limit price as a probability between 0 and 1. `null` for market orders.
+    </ResponseField>
+    <ResponseField name="shares" type="number">
+      Number of shares in the order.
+    </ResponseField>
+    <ResponseField name="amount" type="number">
+      Cost of the order in currency units.
+    </ResponseField>
+    <ResponseField name="position" type="string">
+      Position direction: `l` (long, betting for) or `s` (short, betting against).
+    </ResponseField>
+    <ResponseField name="status" type="string" required>
+      Current order status: `open`, `partial_filled`, `filled`, `canceled`, or `processing`.
+    </ResponseField>
+    <ResponseField name="expired_at" type="string">
+      ISO 8601 datetime at which the order expires. `null` if no expiration is set.
+    </ResponseField>
+    <ResponseField name="created_at" type="string" required>
+      ISO 8601 datetime when the order was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/orders/?status=open&side=bid&limit=2" \
+  --header "Key: pk_live_abc123def456" \
+  --header "Timestamp: 1712534400" \
+  --header "HMAC: 3a9f2c1b...sha512signature"
+```
+
+</CodeGroup>
+
+```json Sample response
+{
+  "count": 47,
+  "next": "https://api.futuur.com/orders/?limit=2&offset=2&status=open",
+  "previous": null,
+  "results": [
+    {
+      "id": 10482,
+      "market": 3801,
+      "side": "bid",
+      "currency": "USDC",
+      "price": 0.65,
+      "shares": 100.0,
+      "amount": 65.0,
+      "position": "l",
+      "status": "open",
+      "expired_at": null,
+      "created_at": "2026-04-05T14:22:10Z"
+    },
+    {
+      "id": 10479,
+      "market": 4112,
+      "side": "bid",
+      "currency": "USDC",
+      "price": 0.42,
+      "shares": 50.0,
+      "amount": 21.0,
+      "position": "l",
+      "status": "open",
+      "expired_at": "2026-04-30T00:00:00Z",
+      "created_at": "2026-04-04T09:05:33Z"
+    }
+  ]
+}
+```

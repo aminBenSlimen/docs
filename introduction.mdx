@@ -1,0 +1,72 @@
+---
+title: "Introduction"
+description: "Get started with the Futuur API to build prediction market applications."
+---
+
+Futuur is a prediction market platform where users trade on the outcomes of real-world events. The Futuur API gives you programmatic access to that same platform — letting you build applications that browse markets, place orders, and track positions.
+
+## What you can do
+
+- **Browse events and markets** — list open prediction markets, filter by category or tag, and retrieve price history.
+- **Place limit orders** — submit bids and asks on event outcomes in both play money and real money modes.
+- **Manage wagers** — retrieve active and settled wager positions for any account.
+- **Read the order book** — access the full depth of bids and asks for any market.
+
+## Base URL
+
+All API requests go to:
+
+```
+https://api.futuur.com
+```
+
+The current version is **v2.0**.
+
+## Key resources
+
+| Resource | Description |
+|----------|-------------|
+| **Events** | Prediction market events. Each event has one or more outcomes. |
+| **Markets** | The tradeable instrument for a specific outcome within an event. |
+| **Orders** | Limit orders placed on a market outcome (bid or ask, long or short). |
+| **Wagers** | Confirmed positions resulting from matched orders. |
+
+## Play money vs. real money
+
+The API supports two currency modes:
+
+- **Play money (OOM)** — use `currency_mode=play_money` to test your integration without financial risk.
+- **Real money (USDC, USDT, USD)** — live trading mode. Requires a funded account.
+
+<Note>
+  Start with play money to verify your authentication and order logic before switching to real money mode.
+</Note>
+
+## Authentication
+
+Every request requires HMAC-SHA512 authentication using a public/private key pair. See the [Authentication](/authentication) page for the full signing process.
+
+## For AI agents
+
+The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. Use this to explore all available endpoints, parameters, and response shapes.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Generate HMAC signatures and authenticate your first request.
+  </Card>
+  <Card title="Events and markets" icon="chart-line" href="/concepts/events-and-markets">
+    Understand how events, outcomes, and markets are structured.
+  </Card>
+  <Card title="Placing a bet" icon="arrow-right" href="/guides/placing-a-bet">
+    Follow a step-by-step guide to placing your first order.
+  </Card>
+  <Card title="List events" icon="list" href="/api-reference/events/list">
+    Browse the full reference for the events endpoint.
+  </Card>
+</CardGroup>
+
+## Support
+
+For questions or issues, contact [support@futuur.com](mailto:support@futuur.com).

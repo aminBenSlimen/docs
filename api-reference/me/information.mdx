@@ -1,0 +1,99 @@
+---
+title: "Account information"
+description: "Retrieve your account details and balance."
+---
+
+Returns details about your authenticated account, including your username, email address, and current balances across all supported currencies.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/me/
+```
+
+## Authentication
+
+This endpoint requires HMAC-SHA512 authentication. Include the following headers with every request:
+
+| Header | Description |
+|--------|-------------|
+| `Key` | Your public API key |
+| `Timestamp` | Current Unix timestamp |
+| `HMAC` | SHA-512 signature of the request |
+
+## Parameters
+
+This endpoint takes no parameters.
+
+## Response
+
+<ResponseField name="id" type="integer" required>
+  Unique numeric identifier for your account.
+</ResponseField>
+
+<ResponseField name="username" type="string" required>
+  Your account username.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The email address associated with your account.
+</ResponseField>
+
+<ResponseField name="oom_balance" type="string" required>
+  Your play money balance in OOM (Opinion on Markets). Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="usdc_balance" type="string" required>
+  Your real money balance in USDC. Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="usdt_balance" type="string">
+  Your real money balance in USDT. Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="usd_balance" type="string">
+  Your real money balance in USD. Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="is_email_confirmed" type="boolean" required>
+  Whether you have confirmed your email address.
+</ResponseField>
+
+## Register a Safe address
+
+If you use a [Safe](https://safe.global) smart account, you can register your Safe address with Futuur by calling `POST /me/safe/`. Submit your Safe address in the request body:
+
+```bash
+curl --request POST \
+  --url https://api.futuur.com/me/safe/ \
+  --header 'Key: YOUR_PUBLIC_KEY' \
+  --header 'Timestamp: 1712345678' \
+  --header 'HMAC: YOUR_HMAC_SIGNATURE' \
+  --header 'Content-Type: application/json' \
+  --data '{"address": "0xYourSafeAddress"}'
+```
+
+On success, the response is the same `UserPrivate` object returned by `GET /me/`.
+
+## Example
+
+```bash
+curl --request GET \
+  --url https://api.futuur.com/me/ \
+  --header 'Key: YOUR_PUBLIC_KEY' \
+  --header 'Timestamp: 1712345678' \
+  --header 'HMAC: YOUR_HMAC_SIGNATURE'
+```
+
+```json
+{
+  "id": 42,
+  "username": "trader_jane",
+  "email": "jane@example.com",
+  "oom_balance": "5000.00",
+  "usdc_balance": "100.00",
+  "usdt_balance": "0.00",
+  "usd_balance": "0.00",
+  "is_email_confirmed": true
+}
+```
