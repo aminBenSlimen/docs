@@ -23,7 +23,7 @@
       },
       {
         "label": "Help Center",
-        "href": "https://docs.futuur.com/"
+        "href": "https://help.futuur.com/"
       }
     ]
   },
@@ -124,8 +124,5 @@
     "light": "/images/favi.svg",
     "dark": "/images/favi-dark.svg"
   },
-  "logo": {
-    "light": "/images/light-M.svg",
-    "dark": "/images/dark-M.svg"
-  }
+  "logo": "/images/favi2.png"
 }
