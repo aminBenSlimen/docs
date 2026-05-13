@@ -1,0 +1,75 @@
+---
+title: "Cancel all orders"
+description: "Cancel every active limit order on your account, optionally scoped to a single event or market."
+---
+
+Cancel all active limit orders for the authenticated user in one call. You can scope the cancellation to a specific event or market — useful when you want to retire a single ladder or quickly unwind your exposure on one outcome without touching the rest of your book.
+
+## Endpoint
+
+```
+POST https://api.futuur.com/orders/cancel-all/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Request
+
+The request body is optional. If you submit an empty body, every active order on your account is canceled.
+
+<ParamField body="event" type="integer">
+  Limit the cancellation to orders on a specific event (question) ID.
+</ParamField>
+
+<ParamField body="market" type="integer">
+  Limit the cancellation to orders on a specific market (outcome) ID. Can be combined with `event` to scope further.
+</ParamField>
+
+## Response
+
+Returns `200 OK` with two arrays of order IDs.
+
+<ResponseField name="canceled_order_ids" type="integer[]" required>
+  IDs of orders that were successfully canceled.
+</ResponseField>
+
+<ResponseField name="processing_order_ids" type="integer[]" required>
+  IDs of orders that could not be canceled immediately because they were already being processed (for example, mid-fill). Retry these IDs with [Batch cancel](/api-reference/orders/batch-cancel) after a short delay if you need them removed.
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL — cancel everything
+curl --request POST \
+  --url "https://api.futuur.com/orders/cancel-all/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
+  --header "Content-Type: application/json" \
+  --data '{}'
+```
+
+```bash cURL — scope to a market
+curl --request POST \
+  --url "https://api.futuur.com/orders/cancel-all/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
+  --header "Content-Type: application/json" \
+  --data '{"event": 873, "market": 2231}'
+```
+
+</CodeGroup>
+
+```json Sample response (200 OK)
+{
+  "canceled_order_ids": [100, 101],
+  "processing_order_ids": [102]
+}
+```

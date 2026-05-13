@@ -58,7 +58,7 @@ Identify the wager you want to sell. Note the following fields from the wager re
 
 - **`market`** — the market ID you'll use in the sell order
 - **`shares`** — the total number of shares you hold (your maximum sell quantity)
-- **`position`** — `l` (long) if you bet the outcome happens, `s` (short) if you bet against it
+- **`position`** — `long` if you bet the outcome happens, `short` if you bet against it
 - **`currency`** — the currency the wager was placed in
 
 ```python python
@@ -124,7 +124,7 @@ curl -X POST "https://api.futuur.com/orders/" \
     "market": 67890,
     "side": "ask",
     "currency": "OOM",
-    "position": "l",
+    "position": "long",
     "shares": 150.0,
     "price": null
   }'
@@ -171,7 +171,7 @@ curl -X POST "https://api.futuur.com/orders/" \
     "market": 67890,
     "side": "ask",
     "currency": "OOM",
-    "position": "l",
+    "position": "long",
     "shares": 150.0,
     "price": 0.70
   }'
@@ -263,8 +263,8 @@ After a partial fill, your wager's `shares` field decreases by the number of sha
 
 | Position | What it means | How to sell |
 |---|---|---|
-| Long (`"l"`) | You bet the outcome **happens** | Place `side="ask"`, `position="l"` |
-| Short (`"s"`) | You bet the outcome **does not happen** | Place `side="ask"`, `position="s"` |
+| Long (`"long"`) | You bet the outcome **happens** | Place `side="ask"`, `position="long"` |
+| Short (`"short"`) | You bet the outcome **does not happen** | Place `side="ask"`, `position="short"` |
 
 Always match the `position` field in your sell order to the position type you hold. Mismatching will result in an error or an unintended new position.
 

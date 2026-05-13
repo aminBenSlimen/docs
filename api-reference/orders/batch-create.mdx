@@ -1,0 +1,160 @@
+---
+title: "Batch create orders"
+description: "Submit between 1 and 20 limit orders in a single request."
+---
+
+Create multiple limit or market orders in a single API call. Each item in the `orders` array is validated and matched independently — partial failures do not block successful orders in the same batch.
+
+Use this endpoint to quote ladders, hedge positions, or rebalance across multiple markets without sending separate requests.
+
+## Endpoint
+
+```
+POST https://api.futuur.com/orders/batch/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Headers
+
+<ParamField header="Idempotency-Key" type="string">
+  Optional. A unique value chosen by the client for a logical operation. Replaying the same `POST` with the same key and the same JSON body returns the stored response without creating duplicate orders. A different body produces a new fingerprint, so requoting is not blocked.
+</ParamField>
+
+## Request
+
+<ParamField body="orders" type="object[]" required>
+  An array of 1 to 20 order objects. Each entry follows the same shape as [Create order](/api-reference/orders/create).
+  <Expandable title="order properties">
+    <ResponseField name="market" type="integer" required>
+      Market (outcome) ID for this order.
+    </ResponseField>
+    <ResponseField name="event" type="integer">
+      Optional event ID. When set, the API verifies the market belongs to this event.
+    </ResponseField>
+    <ResponseField name="side" type="string" required>
+      Order side: `bid` (buy) or `ask` (sell).
+    </ResponseField>
+    <ResponseField name="position" type="string" required>
+      Position direction: `long` (in favor of the outcome) or `short` (against).
+    </ResponseField>
+    <ResponseField name="price" type="number">
+      Limit price between 0 and 1. Use `null` for a market order.
+    </ResponseField>
+    <ResponseField name="shares" type="number" required>
+      Number of shares to buy or sell. Submitted as a decimal string.
+    </ResponseField>
+    <ResponseField name="amount" type="number">
+      Optional total cost for validation against `shares` and `price`.
+    </ResponseField>
+    <ResponseField name="currency" type="string" required>
+      Currency for the order: `USDC`, `USDT`, `USD`, or `OOM`.
+    </ResponseField>
+    <ResponseField name="expired_at" type="string">
+      ISO 8601 datetime when the order should auto-cancel. `null` for no expiration.
+    </ResponseField>
+    <ResponseField name="cancel_conflicting_orders" type="boolean" default="false">
+      When `true`, conflicting open orders are canceled before the new order is placed.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+Returns `200 OK` with one result per submitted order, plus the IDs of any conflicting orders that were canceled to make room for them.
+
+<ResponseField name="results" type="object[]" required>
+  Per-order result, returned in the same order as the request.
+  <Expandable title="result properties">
+    <ResponseField name="index" type="integer" required>
+      Zero-based position of this order in the request payload.
+    </ResponseField>
+    <ResponseField name="success" type="boolean" required>
+      `true` if the order was created.
+    </ResponseField>
+    <ResponseField name="order" type="object">
+      Created limit order. Present when `success` is `true`.
+    </ResponseField>
+    <ResponseField name="errors" type="any">
+      Validation error for this order. Present when `success` is `false`. May be a string or an object describing field-level issues.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="cancelled_existing_order_ids" type="integer[]" required>
+  IDs of existing open orders that were canceled because `cancel_conflicting_orders` was set on one or more items in the batch.
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url "https://api.futuur.com/orders/batch/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
+  --header "Idempotency-Key: 5b1f0c0a-0b9f-4d3a-9f8c-1d2b3a4e5f60" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "orders": [
+      {
+        "event": 873,
+        "market": 2231,
+        "shares": "13",
+        "currency": "OOM",
+        "position": "long",
+        "side": "bid",
+        "price": "0.43"
+      },
+      {
+        "event": 873,
+        "market": 2231,
+        "shares": "0.04",
+        "currency": "OOM",
+        "position": "short",
+        "side": "bid",
+        "price": "0.44"
+      }
+    ]
+  }'
+```
+
+</CodeGroup>
+
+```json Sample response (200 OK)
+{
+  "results": [
+    {
+      "index": 0,
+      "success": true,
+      "order": {
+        "id": 10501,
+        "event": "873",
+        "market": "2231",
+        "price": 0.43,
+        "shares": 13.0,
+        "shares_requested": 13.0,
+        "shares_filled": "0.0",
+        "currency": "OOM",
+        "side": "bid",
+        "position": "long",
+        "expired_at": null,
+        "status": "open",
+        "created": "2026-04-07T12:00:00Z"
+      }
+    },
+    {
+      "index": 1,
+      "success": false,
+      "errors": "InvalidShares"
+    }
+  ],
+  "cancelled_existing_order_ids": []
+}
+```

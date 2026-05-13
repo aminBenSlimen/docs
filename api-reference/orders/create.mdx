@@ -17,6 +17,12 @@ POST https://api.futuur.com/orders/
   This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
+## Headers
+
+<ParamField header="Idempotency-Key" type="string">
+  Optional. A unique value chosen by the client for a logical operation. Replaying the same `POST` with the same key and the same JSON body returns the stored response without creating a duplicate order. A different body (for example, a new price) produces a different fingerprint, so requoting is not blocked.
+</ParamField>
+
 ## Request
 
 <ParamField body="market" type="integer" required>
@@ -44,7 +50,7 @@ POST https://api.futuur.com/orders/
 </ParamField>
 
 <ParamField body="position" type="string">
-  Position direction. Use `l` (long) to bet that the outcome occurs, or `s` (short) to bet against it.
+  Position direction. Use `long` to bet in favor of the outcome, or `short` to bet against it.
 </ParamField>
 
 <ParamField body="expired_at" type="string">
@@ -88,7 +94,7 @@ Returns `201 Created` with the newly created order object.
 </ResponseField>
 
 <ResponseField name="position" type="string">
-  Position direction: `l` (long) or `s` (short).
+  Position direction: `long` or `short`.
 </ResponseField>
 
 <ResponseField name="status" type="string" required>
@@ -141,7 +147,7 @@ curl --request POST \
     "currency": "USDC",
     "price": 0.65,
     "shares": 100,
-    "position": "l",
+    "position": "long",
     "cancel_conflicting_orders": false
   }'
 ```
@@ -157,7 +163,7 @@ curl --request POST \
   "price": 0.65,
   "shares": 100.0,
   "amount": 65.0,
-  "position": "l",
+  "position": "long",
   "status": "open",
   "expired_at": null,
   "created_at": "2026-04-07T11:30:00Z"

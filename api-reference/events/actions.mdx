@@ -27,6 +27,10 @@ HMAC authentication is required. Include the following headers with every reques
   The unique identifier of the event.
 </ParamField>
 
+<ParamField query="aggregate_by_orders" type="boolean" default="true">
+  When `true`, multiple wager actions resulting from the same originating order are collapsed into a single action entry. Set to `false` to receive every underlying action separately.
+</ParamField>
+
 <ParamField query="currency_mode" type="string">
   Filter actions by currency mode. Accepted values: `play_money`, `real_money`. Leave empty to return actions for both modes.
 </ParamField>

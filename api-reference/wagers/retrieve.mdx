@@ -72,7 +72,7 @@ Returns a wager detail object.
 </ResponseField>
 
 <ResponseField name="position" type="string" required>
-  Position direction: `l` (long, betting for the outcome) or `s` (short, betting against).
+  Position direction: `long` (betting in favor of the outcome) or `short` (betting against).
 </ResponseField>
 
 <ResponseField name="currency_mode" type="string" required>
@@ -144,7 +144,7 @@ curl --request GET \
   "current_value": 71.50,
   "payout": null,
   "status": "purchased",
-  "position": "l",
+  "position": "long",
   "currency_mode": "real_money",
   "market_detail": {
     "id": 3801,

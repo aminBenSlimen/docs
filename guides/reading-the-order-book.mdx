@@ -13,8 +13,8 @@ The order book shows all open buy (bid) and sell (ask) orders for a market outco
 
 The order book aggregates open orders at each price level into two sides:
 
-- **Bids** — buyers willing to pay up to a certain price (buy orders)
-- **Asks** — sellers willing to accept at least a certain price (sell orders)
+- **Bids** (`bid` in the response) — buyers willing to pay up to a certain price (buy orders)
+- **Asks** (`ask` in the response) — sellers willing to accept at least a certain price (sell orders)
 
 Each level shows the quantity available and the cumulative depth of the book up to that price. This tells you how much liquidity exists and at what prices.
 
@@ -32,7 +32,7 @@ response = requests.get(
     params={
         "currency_mode": "play_money",
         "market": 67890,
-        "position": "l",
+        "position": "long",
     },
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -49,7 +49,7 @@ print(order_book)
 curl -G "https://api.futuur.com/events/12345/order_book/" \
   --data-urlencode "currency_mode=play_money" \
   --data-urlencode "market=67890" \
-  --data-urlencode "position=l" \
+  --data-urlencode "position=long" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -68,49 +68,59 @@ curl -G "https://api.futuur.com/events/12345/order_book/" \
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `position` | string | `l` | `l` for long order book, `s` for short order book |
+| `position` | string | `long` | `long` for long order book, `short` for short order book |
 
 ## Example response
 
 ```json
 {
-  "bids": [
+  "bid": [
     {
       "price": 0.62,
       "total_shares": 500.0,
       "total_amount": 310.0,
+      "total_fees": 0.50,
       "cumulative_shares": 500.0,
-      "cumulative_amount": 310.0
+      "cumulative_amount": 310.0,
+      "cumulative_fees": 0.50
     },
     {
       "price": 0.60,
       "total_shares": 1200.0,
       "total_amount": 720.0,
+      "total_fees": 1.20,
       "cumulative_shares": 1700.0,
-      "cumulative_amount": 1030.0
+      "cumulative_amount": 1030.0,
+      "cumulative_fees": 1.70
     },
     {
       "price": 0.58,
       "total_shares": 800.0,
       "total_amount": 464.0,
+      "total_fees": 0.80,
       "cumulative_shares": 2500.0,
-      "cumulative_amount": 1494.0
+      "cumulative_amount": 1494.0,
+      "cumulative_fees": 2.50
     }
   ],
-  "asks": [
+  "ask": [
     {
       "price": 0.65,
       "total_shares": 300.0,
       "total_amount": 195.0,
+      "total_fees": 0.30,
       "cumulative_shares": 300.0,
-      "cumulative_amount": 195.0
+      "cumulative_amount": 195.0,
+      "cumulative_fees": 0.30
     },
     {
       "price": 0.67,
       "total_shares": 750.0,
       "total_amount": 502.5,
+      "total_fees": 0.75,
       "cumulative_shares": 1050.0,
-      "cumulative_amount": 697.5
+      "cumulative_amount": 697.5,
+      "cumulative_fees": 1.05
     }
   ]
 }
@@ -118,26 +128,28 @@ curl -G "https://api.futuur.com/events/12345/order_book/" \
 
 ## Order book fields
 
-Each level in the `bids` and `asks` arrays contains the following fields:
+Each level in the `bid` and `ask` arrays contains the following fields:
 
 | Field | Type | Description |
 |---|---|---|
 | `price` | float | The price level (0 to 1, representing probability) |
 | `total_shares` | float | Total shares available at exactly this price level |
 | `total_amount` | float | Total currency amount at exactly this price level |
+| `total_fees` | float | Total fees attributable to the shares at this price level |
 | `cumulative_shares` | float | Total shares available at this price level and better |
 | `cumulative_amount` | float | Total currency amount at this price level and better |
+| `cumulative_fees` | float | Cumulative fees from the top of the book through this level |
 
 For **bids**, levels are sorted from highest price to lowest (best bid first).
 For **asks**, levels are sorted from lowest price to highest (best ask first).
 
 ## Interpreting the best bid and ask
 
-The **best bid** is the first entry in the `bids` array — the highest price a buyer is currently willing to pay. The **best ask** is the first entry in `asks` — the lowest price a seller will accept.
+The **best bid** is the first entry in the `bid` array — the highest price a buyer is currently willing to pay. The **best ask** is the first entry in `ask` — the lowest price a seller will accept.
 
 ```python python
-best_bid = order_book["bids"][0]["price"] if order_book["bids"] else None
-best_ask = order_book["asks"][0]["price"] if order_book["asks"] else None
+best_bid = order_book["bid"][0]["price"] if order_book["bid"] else None
+best_ask = order_book["ask"][0]["price"] if order_book["ask"] else None
 
 if best_bid and best_ask:
     spread = round(best_ask - best_bid, 4)
@@ -165,8 +177,7 @@ The `cumulative_shares` field tells you how much total liquidity is available up
 ```python python
 target_shares = 1000.0
 
-# Find the price level where cumulative_shares covers your order
-for level in order_book["asks"]:
+for level in order_book["ask"]:
     if level["cumulative_shares"] >= target_shares:
         print(f"You can buy {target_shares} shares up to price {level['price']}")
         break
@@ -190,19 +201,18 @@ The `position` parameter controls which order book you're viewing:
 
 | Value | Description |
 |---|---|
-| `l` (default) | Long order book — orders betting the outcome **happens** |
-| `s` | Short order book — orders betting the outcome **does not happen** |
+| `long` (default) | Long order book — orders betting the outcome **happens** |
+| `short` | Short order book — orders betting the outcome **does not happen** |
 
-Long and short positions trade in separate books. If you hold a short position and want to sell, fetch the short order book (`position=s`) to see relevant bids.
+Long and short positions trade in separate books. If you hold a short position and want to sell, fetch the short order book (`position=short`) to see relevant bids.
 
 ```python python
-# Fetch the short order book
 response = requests.get(
     "https://api.futuur.com/events/12345/order_book/",
     params={
         "currency_mode": "play_money",
         "market": 67890,
-        "position": "s",
+        "position": "short",
     },
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -212,6 +222,6 @@ response = requests.get(
 )
 
 short_book = response.json()
-best_short_bid = short_book["bids"][0]["price"] if short_book["bids"] else None
+best_short_bid = short_book["bid"][0]["price"] if short_book["bid"] else None
 print("Best bid for short shares:", best_short_bid)
 ```

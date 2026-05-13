@@ -35,13 +35,13 @@ HMAC authentication is required. Include the following headers with every reques
   The ID of the market within the event for which to retrieve the order book.
 </ParamField>
 
-<ParamField query="position" type="string" default="l">
-  The position side to query. Accepted values: `l` (long), `s` (short).
+<ParamField query="position" type="string" default="long">
+  The position side to query. Accepted values: `long`, `short`.
 </ParamField>
 
 ## Response
 
-<ResponseField name="bids" type="object[]" required>
+<ResponseField name="bid" type="object[]" required>
   Aggregated bid levels, sorted from highest to lowest price.
   <Expandable title="properties">
     <ResponseField name="price" type="number">
@@ -53,11 +53,17 @@ HMAC authentication is required. Include the following headers with every reques
     <ResponseField name="total_amount" type="number">
       Total currency amount represented at this price level.
     </ResponseField>
+    <ResponseField name="total_fees" type="number">
+      Total fees attributable to the shares offered at this price level.
+    </ResponseField>
     <ResponseField name="cumulative_shares" type="number">
       Cumulative shares from the best bid down to and including this level.
     </ResponseField>
     <ResponseField name="cumulative_amount" type="number">
       Cumulative currency amount from the best bid down to and including this level.
+    </ResponseField>
+    <ResponseField name="cumulative_fees" type="number">
+      Cumulative fees from the best bid down to and including this level.
     </ResponseField>
     <ResponseField name="total_user_shares" type="number">
       Number of shares at this level belonging to you.
@@ -68,7 +74,7 @@ HMAC authentication is required. Include the following headers with every reques
   </Expandable>
 </ResponseField>
 
-<ResponseField name="asks" type="object[]" required>
+<ResponseField name="ask" type="object[]" required>
   Aggregated ask levels, sorted from lowest to highest price.
   <Expandable title="properties">
     <ResponseField name="price" type="number">
@@ -80,11 +86,17 @@ HMAC authentication is required. Include the following headers with every reques
     <ResponseField name="total_amount" type="number">
       Total currency amount represented at this price level.
     </ResponseField>
+    <ResponseField name="total_fees" type="number">
+      Total fees attributable to the shares offered at this price level.
+    </ResponseField>
     <ResponseField name="cumulative_shares" type="number">
       Cumulative shares from the best ask up to and including this level.
     </ResponseField>
     <ResponseField name="cumulative_amount" type="number">
       Cumulative currency amount from the best ask up to and including this level.
+    </ResponseField>
+    <ResponseField name="cumulative_fees" type="number">
+      Cumulative fees from the best ask up to and including this level.
     </ResponseField>
     <ResponseField name="total_user_shares" type="number">
       Number of shares at this level belonging to you.
@@ -99,7 +111,7 @@ HMAC authentication is required. Include the following headers with every reques
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/1023/order_book/?currency_mode=play_money&market=501&position=l" \
+  --url "https://api.futuur.com/events/1023/order_book/?currency_mode=play_money&market=501&position=long" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"
@@ -107,13 +119,15 @@ curl --request GET \
 
 ```json Sample response
 {
-  "bids": [
+  "bid": [
     {
       "price": 0.62,
       "total_shares": 120.0,
       "total_amount": 74.4,
+      "total_fees": 0.12,
       "cumulative_shares": 120.0,
       "cumulative_amount": 74.4,
+      "cumulative_fees": 0.12,
       "total_user_shares": 50.0,
       "total_user_shares_requested": 0.0
     },
@@ -121,19 +135,23 @@ curl --request GET \
       "price": 0.60,
       "total_shares": 80.0,
       "total_amount": 48.0,
+      "total_fees": 0.08,
       "cumulative_shares": 200.0,
       "cumulative_amount": 122.4,
+      "cumulative_fees": 0.20,
       "total_user_shares": 0.0,
       "total_user_shares_requested": 0.0
     }
   ],
-  "asks": [
+  "ask": [
     {
       "price": 0.64,
       "total_shares": 95.0,
       "total_amount": 60.8,
+      "total_fees": 0.10,
       "cumulative_shares": 95.0,
       "cumulative_amount": 60.8,
+      "cumulative_fees": 0.10,
       "total_user_shares": 0.0,
       "total_user_shares_requested": 10.0
     },
@@ -141,8 +159,10 @@ curl --request GET \
       "price": 0.66,
       "total_shares": 60.0,
       "total_amount": 39.6,
+      "total_fees": 0.06,
       "cumulative_shares": 155.0,
       "cumulative_amount": 100.4,
+      "cumulative_fees": 0.16,
       "total_user_shares": 0.0,
       "total_user_shares_requested": 0.0
     }

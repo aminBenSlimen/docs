@@ -5,7 +5,7 @@ description: "Learn how limit orders and market orders work in Futuur."
 
 An **order** is an instruction to buy or sell shares in a market outcome. When you place an order, you specify which market you want to trade, which side (buy or sell), what position to take, and how many shares or how much to spend.
 
-Orders are created via `POST /orders/`, listed via `GET /orders/`, and canceled via `PATCH /orders/{id}/cancel/`.
+Orders are created via [`POST /orders/`](/api-reference/orders/create), listed via [`GET /orders/`](/api-reference/orders/list), and canceled via [`PATCH /orders/{id}/cancel/`](/api-reference/orders/cancel). For higher-throughput flows, you can also [submit](/api-reference/orders/batch-create) or [cancel](/api-reference/orders/batch-cancel) up to 20 orders at once, or [cancel everything](/api-reference/orders/cancel-all) on your account in a single call.
 
 ## Order types
 
@@ -19,7 +19,7 @@ Orders are created via `POST /orders/`, listed via `GET /orders/`, and canceled 
     {
       "market": 42,
       "side": "bid",
-      "position": "l",
+      "position": "long",
       "amount": 10.00,
       "currency": "OOM",
       "price": null
@@ -35,7 +35,7 @@ Orders are created via `POST /orders/`, listed via `GET /orders/`, and canceled 
     {
       "market": 42,
       "side": "bid",
-      "position": "l",
+      "position": "long",
       "amount": 10.00,
       "currency": "OOM",
       "price": 0.45
@@ -59,11 +59,11 @@ The `position` field specifies which direction you are betting.
 
 | Value | Meaning |
 |---|---|
-| `l` (long) | Betting **in favor** of the outcome — you profit if it resolves true |
-| `s` (short) | Betting **against** the outcome — you profit if it resolves false |
+| `long` | Betting **in favor** of the outcome — you profit if it resolves true |
+| `short` | Betting **against** the outcome — you profit if it resolves false |
 
 <Note>
-  Long and short positions can both be bought (`bid`) or sold (`ask`). For example, selling a long position (`ask` + `l`) reduces your existing long exposure.
+  Long and short positions can both be bought (`bid`) or sold (`ask`). For example, selling a long position (`ask` + `long`) reduces your existing long exposure.
 </Note>
 
 ## Order lifecycle
@@ -121,7 +121,7 @@ flowchart LR
 |---|---|---|
 | `market` | integer | ID of the market (outcome) to trade |
 | `side` | string | `bid` (buy) or `ask` (sell) |
-| `position` | string | `l` (long) or `s` (short) |
+| `position` | string | `long` or `short` |
 | `price` | float \| null | Limit price 0–1, or `null` for a market order |
 | `shares` | float | Number of shares (use instead of `amount`) |
 | `amount` | float | Monetary amount to spend (use instead of `shares`) |

@@ -70,6 +70,7 @@
               "api-reference/events/actions",
               "api-reference/events/order-book",
               "api-reference/events/price-history",
+              "api-reference/events/related-events",
               "api-reference/events/wagers"
             ]
           },
@@ -78,7 +79,10 @@
             "pages": [
               "api-reference/orders/list",
               "api-reference/orders/create",
-              "api-reference/orders/cancel"
+              "api-reference/orders/batch-create",
+              "api-reference/orders/cancel",
+              "api-reference/orders/batch-cancel",
+              "api-reference/orders/cancel-all"
             ]
           },
           {
@@ -92,7 +96,8 @@
             "group": "Account",
             "pages": [
               "api-reference/me/information",
-              "api-reference/me/ranking"
+              "api-reference/me/ranking",
+              "api-reference/me/safe"
             ]
           }
         ]

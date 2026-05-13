@@ -105,7 +105,7 @@ response = requests.get(
     params={
         "currency_mode": "play_money",
         "market": 67890,
-        "position": "l",
+        "position": "long",
     },
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -124,7 +124,7 @@ print(f"Best ask: {best_ask}, Best bid: {best_bid}")
 curl -G "https://api.futuur.com/events/12345/order_book/" \
   --data-urlencode "currency_mode=play_money" \
   --data-urlencode "market=67890" \
-  --data-urlencode "position=l" \
+  --data-urlencode "position=long" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -140,7 +140,7 @@ See [Reading the order book](/guides/reading-the-order-book) for a full explanat
 
 A **market order** (`price=null`) executes immediately at the best available price. Use this when you want to enter a position right away without worrying about a specific price.
 
-To buy shares in a market outcome, set `side="bid"` (buying) and `position="l"` (long — betting the outcome occurs).
+To buy shares in a market outcome, set `side="bid"` (buying) and `position="long"` (betting the outcome occurs).
 
 <CodeGroup>
 
@@ -152,7 +152,7 @@ response = requests.post(
         "market": 67890,
         "side": "bid",
         "currency": "OOM",
-        "position": "l",
+        "position": "long",
         "amount": 100.0,
         "price": None,
     },
@@ -179,7 +179,7 @@ curl -X POST "https://api.futuur.com/orders/" \
     "market": 67890,
     "side": "bid",
     "currency": "OOM",
-    "position": "l",
+    "position": "long",
     "amount": 100.0,
     "price": null
   }'
@@ -199,7 +199,7 @@ response = requests.post(
         "market": 67890,
         "side": "bid",
         "currency": "USDC",
-        "position": "l",
+        "position": "long",
         "amount": 50.0,
         "price": None,
     },
@@ -223,7 +223,7 @@ curl -X POST "https://api.futuur.com/orders/" \
     "market": 67890,
     "side": "bid",
     "currency": "USDC",
-    "position": "l",
+    "position": "long",
     "amount": 50.0,
     "price": null
   }'
@@ -253,7 +253,7 @@ response = requests.post(
         "market": 67890,
         "side": "bid",
         "currency": "OOM",
-        "position": "l",
+        "position": "long",
         "amount": 100.0,
         "price": 0.55,
     },
@@ -280,7 +280,7 @@ curl -X POST "https://api.futuur.com/orders/" \
     "market": 67890,
     "side": "bid",
     "currency": "OOM",
-    "position": "l",
+    "position": "long",
     "amount": 100.0,
     "price": 0.55
   }'

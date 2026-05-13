@@ -1,0 +1,94 @@
+---
+title: "Register Safe address"
+description: "Register a Safe smart account address for the authenticated user."
+---
+
+Register a [Safe](https://safe.global) smart account address with your Futuur account. After registration, you can use your Safe to fund and settle real money trades on supported chains.
+
+## Endpoint
+
+```
+POST https://api.futuur.com/me/safe/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Request
+
+<ParamField body="safe_address" type="string" required>
+  The Safe smart account address (e.g. `0xAbC...123`).
+</ParamField>
+
+<ParamField body="chain_id" type="integer" required>
+  The chain ID where the Safe is deployed. For example, `1` for Ethereum mainnet or `137` for Polygon.
+</ParamField>
+
+## Response
+
+Returns `200 OK` with the updated `UserPrivate` object — the same shape as `GET /me/`. Use this response to confirm the Safe address has been associated with your account.
+
+<ResponseField name="id" type="integer" required>
+  Your account identifier.
+</ResponseField>
+
+<ResponseField name="username" type="string">
+  Your account username.
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The email address associated with your account.
+</ResponseField>
+
+<ResponseField name="wallet" type="object" required>
+  Dictionary containing balances for every currency in your wallet.
+</ResponseField>
+
+<ResponseField name="is_wallet_user" type="string" required>
+  `true` if you signed up via wallet (Privy).
+</ResponseField>
+
+<ResponseField name="real_currency_enabled" type="boolean" required>
+  Whether real money trading is enabled for your account.
+</ResponseField>
+
+<ResponseField name="kyc_status" type="string" required>
+  Current KYC status. One of `no_need`, `requested`, `initialized`, `refused`, `approved`, or `by_passed`.
+</ResponseField>
+
+<Tip>
+  See [Account information](/api-reference/me/information) for the full list of `UserPrivate` fields returned by this endpoint.
+</Tip>
+
+## Example
+
+```bash cURL
+curl --request POST \
+  --url "https://api.futuur.com/me/safe/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "safe_address": "0xAbC1234567890DefAbC1234567890DefAbC12345",
+    "chain_id": 137
+  }'
+```
+
+```json Sample response (200 OK)
+{
+  "id": 42,
+  "username": "trader_jane",
+  "email": "jane@example.com",
+  "wallet": {
+    "OOM": "5000.00",
+    "USDC": "100.00"
+  },
+  "is_wallet_user": "true",
+  "real_currency_enabled": true,
+  "kyc_status": "approved"
+}
+```

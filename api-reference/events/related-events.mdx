@@ -1,0 +1,102 @@
+---
+title: "Related events"
+description: "Retrieve a list of events related to a given event by topic, category, and recent activity."
+---
+
+Fetch events related to a specific event. Use this endpoint to surface similar markets when a user is viewing an event detail page, or to power a recommended feed.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/events/{id}/related_events/
+```
+
+## Authentication
+
+No authentication is required for this endpoint.
+
+## Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the source event.
+</ParamField>
+
+## Response
+
+Returns an array of related event objects.
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier for the related event.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Display title of the related event. Maximum 150 characters.
+</ResponseField>
+
+<ResponseField name="wagers_count" type="integer" required>
+  Number of wagers placed on this event in play money.
+</ResponseField>
+
+<ResponseField name="wagers_count_canonical" type="integer" required>
+  Number of wagers placed on this event in real money.
+</ResponseField>
+
+<ResponseField name="volume_play_money" type="string" required>
+  Total play money volume traded on this event. Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="volume_real_money" type="string" required>
+  Total real money volume traded on this event. Returned as a decimal string.
+</ResponseField>
+
+<ResponseField name="bet_end_date" type="string">
+  ISO 8601 datetime when betting closes. `null` if not set.
+</ResponseField>
+
+<ResponseField name="event_start_date" type="string">
+  ISO 8601 datetime when the underlying event begins. `null` if not set.
+</ResponseField>
+
+<ResponseField name="highest_market" type="string" required>
+  Title or label of the leading market in play money mode.
+</ResponseField>
+
+<ResponseField name="highest_market_real_money" type="string" required>
+  Title or label of the leading market in real money mode.
+</ResponseField>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/events/1023/related_events/"
+```
+
+```json Sample response
+[
+  {
+    "id": 1187,
+    "title": "Will the Nasdaq close above 18,000 by end of Q2 2026?",
+    "wagers_count": 312,
+    "wagers_count_canonical": 48,
+    "volume_play_money": "84520.00",
+    "volume_real_money": "1240.50",
+    "bet_end_date": "2026-06-30T23:59:59Z",
+    "event_start_date": "2026-01-15T00:00:00Z",
+    "highest_market": "Yes",
+    "highest_market_real_money": "Yes"
+  },
+  {
+    "id": 1206,
+    "title": "Will the Federal Reserve cut rates before July 2026?",
+    "wagers_count": 540,
+    "wagers_count_canonical": 91,
+    "volume_play_money": "120030.00",
+    "volume_real_money": "3015.00",
+    "bet_end_date": "2026-07-31T23:59:59Z",
+    "event_start_date": null,
+    "highest_market": "Yes",
+    "highest_market_real_money": "No"
+  }
+]
+```

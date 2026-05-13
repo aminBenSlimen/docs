@@ -61,19 +61,7 @@ This endpoint takes no parameters.
 
 ## Register a Safe address
 
-If you use a [Safe](https://safe.global) smart account, you can register your Safe address with Futuur by calling `POST /me/safe/`. Submit your Safe address in the request body:
-
-```bash
-curl --request POST \
-  --url https://api.futuur.com/me/safe/ \
-  --header 'Key: YOUR_PUBLIC_KEY' \
-  --header 'Timestamp: 1712345678' \
-  --header 'HMAC: YOUR_HMAC_SIGNATURE' \
-  --header 'Content-Type: application/json' \
-  --data '{"address": "0xYourSafeAddress"}'
-```
-
-On success, the response is the same `UserPrivate` object returned by `GET /me/`.
+If you use a [Safe](https://safe.global) smart account, register it with Futuur by calling [`POST /me/safe/`](/api-reference/me/safe). The request body requires both a `safe_address` and a `chain_id`. On success, the response is the same `UserPrivate` object returned by `GET /me/`.
 
 ## Example
 
